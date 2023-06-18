@@ -2,13 +2,14 @@
 A simple example that connects to the Adafruit IO MQTT server
 and publishes values that represent a sine wave
 """
-
+print("Starting")
 import network
 import time
 from math import sin
 from umqtt.simple import MQTTClient
 from secret import *
 import errno
+import ujson
 
 # Fill in your WiFi network name (ssid) and password here:
 wifi_ssid = ssid
@@ -29,7 +30,8 @@ mqtt_host = "192.168.1.193"
 mqtt_username = "bigyucca"  # Your Adafruit IO username
 mqtt_password = "aio_tsUF15Gzlh9Ythcv9RlwnngXbTXh"  # Adafruit IO Key
 #mqtt_publish_topic = "bigyucca/feeds/my-data-feed"  # The MQTT topic for your Adafruit IO Feed
-mqtt_publish_topic = "/test"
+#mqtt_publish_topic = "/test"
+mqtt_publish_topic = "/testjson"
 
 # Enter a random ID for this MQTT Client
 # It needs to be globally unique across all of Adafruit IO.
@@ -59,14 +61,23 @@ except OSError as exc:
 counter = 0
 try:
     while True:
+        
         # Generate some dummy data that changes every loop
         sine = sin(counter)
         counter += .8
+ 
+        payload={"timestamp": time.time()}
+        payload["V1"] = sine
+        payload["V2"] = sine * 2
+        payload["V3"] = sine * 3
+        
+        js = ujson.dumps(payload)
         
         # Publish the data to the topic!
-        print(f'Publish {sine:.2f}')
-        mqtt_client.publish(mqtt_publish_topic, str(sine))
-        
+#        print(f'Publish {sine:.2f}')
+#        mqtt_client.publish(mqtt_publish_topic, str(sine))
+        print("Publish ", js)
+        mqtt_client.publish(mqtt_publish_topic, js)
         # Delay a bit to avoid hitting the rate limit
         time.sleep(3)
 except Exception as e:
