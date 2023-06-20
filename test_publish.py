@@ -1,6 +1,6 @@
 """
-A simple example that connects to the Adafruit IO MQTT server
-and publishes values that represent a sine wave
+A simple example that connects to the MQTT server and publishes
+a JSON string of sensed temperature, pressure and humidity
 """
 print("Starting")
 from weather import WEATHER
