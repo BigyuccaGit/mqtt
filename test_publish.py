@@ -10,15 +10,20 @@ from umqtt.simple import MQTTClient
 import constants
 import errno
 import ujson
+from machine import Pin
 
 # Connect to WiFi
+pin=Pin("LED", Pin.OUT)
+pin.high()
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 wlan.connect(constants.ssid, constants.password)
 while wlan.isconnected() == False:
     print('Waiting for connection...')
+    pin.toggle()
     time.sleep(1)
 print("Connected to WiFi")
+pin.low()
 
 # MQTT details
 mqtt_publish_topic = "/weather"
