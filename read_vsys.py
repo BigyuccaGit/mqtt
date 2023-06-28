@@ -14,3 +14,11 @@ print("""ADC reading:{}
 ADC voltage:{}
 VSYS voltage:{}""".format(adc_reading, adc_voltage, vsys_voltage))
 wl_cs.init(mode=machine.Pin.ALT, pull=machine.Pin.PULL_DOWN, alt=31)#try to restore initial WL_CS state
+
+def measure_vsys():
+    Pin(25, Pin.OUT, value=1)
+    Pin(29, Pin.IN, pull=None)
+    reading = ADC(3).read_u16() * 9.9 / 2**16
+    Pin(25, Pin.OUT, value=0, pull=Pin.PULL_DOWN)
+    Pin(29, Pin.ALT, pull=Pin.PULL_DOWN, alt=7)
+    return reading
