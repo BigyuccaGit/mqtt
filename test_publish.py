@@ -11,6 +11,8 @@ import constants
 import errno
 import ujson
 from machine import Pin
+from read_vsys import read_vsys
+
 
 # Connect to WiFi
 pin=Pin("LED", Pin.OUT)
@@ -65,6 +67,11 @@ try:
         # Publish the data
         print("Publish ", payload)
         mqtt_client.publish(mqtt_publish_topic, payload)
+        
+        # Publish aux data
+        vsys = str(read_vsys())
+        print("Publish vsys ", vsys)
+        mqtt_client.publish("/voltage", vsys)
 
         # Delay before next reading
         time.sleep(interval * 60)
@@ -73,3 +80,5 @@ except Exception as e:
     print(f'Failed to publish message: {e}')
 finally:
     mqtt_client.disconnect()
+
+
