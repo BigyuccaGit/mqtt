@@ -1,9 +1,15 @@
-import machine
+""" Reads VSYS on Pico W
 
-def measure_vsys():
-    machine.Pin(25, machine.Pin.OUT, value=1)
-    machine.Pin(29, machine.Pin.IN, pull=None)
-    reading = machine.ADC(3).read_u16() * 9.9 / 2**16
-    machine.Pin(25, machine.Pin.OUT, value=0, pull=machine.Pin.PULL_DOWN)
-    machine.Pin(29, machine.Pin.ALT, pull=machine.Pin.PULL_DOWN, alt=7)
+Taken from
+
+https://forums.raspberrypi.com/viewtopic.php?p=2062543&hilit=ADC+29#p2062568 """
+
+from machine import Pin, ADC
+
+def read_vsys():
+    Pin(25, Pin.OUT, value=1)
+    Pin(29, Pin.IN, pull=None)
+    reading = ADC(3).read_u16() * 9.9 / 2**16
+    Pin(29, Pin.ALT, Pin.PULL_DOWN, alt=7)
+    Pin(25, Pin.OUT, value=0, pull=Pin.PULL_DOWN)
     return reading
