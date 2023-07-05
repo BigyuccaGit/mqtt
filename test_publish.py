@@ -13,19 +13,47 @@ import ujson
 from machine import Pin
 from read_vsys import read_vsys
 
+# Interval between measurements / retrys (minutes)
+interval = 15
+wifi_retry = 5
 
 # Connect to WiFi
-pin=Pin("LED", Pin.OUT)
-pin.high()
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
-wlan.connect(constants.ssid, constants.password)
-while wlan.isconnected() == False:
-    print('Waiting for connection...')
-    pin.toggle()
-    time.sleep(1)
-print("Connected to WiFi")
-pin.low()
+connected = False
+while not connected:
+    pin=Pin("LED", Pin.OUT)
+    pin.high()
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(constants.ssid, constants.password)
+    
+    # Try several times to connect
+    count = 10
+    while count > 0:
+        connected = wlan.isconnected()
+        if not connected:
+            print('Waiting for connection...', count)
+            pin.toggle()
+            time.sleep(1)
+            count -= 1
+            
+        else:
+            ip = wlan.ifconfig()[0]
+            print("Connected to",ip,"on WiFi")
+            break
+
+    pin.low()
+
+    # If not connected   
+    if not connected:
+        
+        # Wait a bit then try again
+        print("Will retry wifi in", wifi_retry,"minutes")
+        for i in range(10):
+            pin.toggle()
+            time.sleep(.1)
+        pin.low()
+        time.sleep(wifi_retry * 60)
+ 
 
 # MQTT details
 mqtt_publish_topic = "/weather"
@@ -52,8 +80,7 @@ except OSError as exc:
     print(exc.errno)
     print(errno.errorcode[exc.errno])
 
-# Interval between measurements (minutes)
-interval = 15
+
 
 try:
     while True:
@@ -65,12 +92,12 @@ try:
         payload = ujson.dumps(raw)
         
         # Publish the data
-        print("Publish ", payload)
+        print("Publish", payload)
         mqtt_client.publish(mqtt_publish_topic, payload)
         
         # Publish aux data
         vsys = str(read_vsys())
-        print("Publish vsys ", vsys)
+        print("Publish vsys", vsys)
         mqtt_client.publish("/voltage", vsys)
 
         # Delay before next reading
