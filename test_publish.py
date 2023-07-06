@@ -14,27 +14,15 @@ from machine import Pin
 from read_vsys import read_vsys
 
 # Interval between measurements / retrys (minutes)
-interval = 1
-wifi_retry = 1
+interval = 15
+wifi_retry = 5
 
 # MQTT details
 mqtt_publish_topic = "/weather"
 
-def wifi_available():
-    """ Check if network is available"""
-    test = False
-    for ap in wlan.scan():
-        test = ap[0].decode("ascii") == constants.ssid
-#        print(test, ap[0].decode("ascii") , constants.ssid)
-        if test:
-            break;
- 
-    return test
-
-# Loop infinitely
-while True:
-        
-    # Connect to WiFi
+# Connect to WiFi
+def connect_to_wifi():
+    """ Connect to wi fi """ 
     connected = False
     while not connected:
         pin=Pin("LED", Pin.OUT)
@@ -55,7 +43,7 @@ while True:
                 
             else:
                 ip = wlan.ifconfig()[0]
-                print("Connected to",ip,"on WiFi")
+                print("Connected",ip,"to WiFi")
                 break
 
         pin.low()
@@ -70,51 +58,66 @@ while True:
                 time.sleep(.1)
             pin.low()
             time.sleep(wifi_retry * 60)
-     
-    # Proceed to getting data
+
+
+def connect_to_mqtt_server():
+    """ setup client and connect to mqtt server """
     
-    try:
+    #mqtt_client = MQTTClient(
+    #        client_id=mqtt_client_id,
+    #        server=mqtt_host,
+    #        user=mqtt_username,
+    #        password=mqtt_password)
+    # Initialize the MQTTClient 
+
+    print("Setting up mqtt client")
+    mqtt_client = MQTTClient(
+        client_id = constants.mqtt_client_id,
+        server = constants.mqtt_host,
+        port = 1883)
+
+    # Connect to the MQTT server
+    print("Connecting to mqtt_client")
+    mqtt_client.connect()
+    
+    return mqtt_client
+        
+        
+# Loop infinitely
+while True:
+ 
+    try: 
+        # Connect to WiFi
+        connect_to_wifi()
+        
         # Set up call to weather sensor
         weather = WEATHER()
 
-        #mqtt_client = MQTTClient(
-        #        client_id=mqtt_client_id,
-        #        server=mqtt_host,
-        #        user=mqtt_username,
-        #        password=mqtt_password)
-        # Initialize the MQTTClient 
-
-        mqtt_client = MQTTClient(
-            client_id = constants.mqtt_client_id,
-            server = constants.mqtt_host,
-            port = 1883)
-
-        # Connect to the MQTT server
-        mqtt_client.connect()
+        # Setup client connection to mqtt server 
+        mqtt_client = connect_to_mqtt_server()
         
+        # Commence loop over readings
         while True:
-
             # Get weather readings in dictionary form
             raw=weather.get_readings()
-            
             # Convert to JSON format
-            payload = ujson.dumps(raw)
-            
+            payload = ujson.dumps(raw)            
             # Publish the data
-            print("Publish", payload)
+            print("Publish weather", payload)
             mqtt_client.publish(mqtt_publish_topic, payload)
             
             # Publish aux data
             vsys = str(read_vsys())
-            print("Publish vsys", vsys)
+            print("Publish vsys", vsys, "volts")
             mqtt_client.publish("/voltage", vsys)
 
             # Delay before next reading
+            print("Next sample in",interval,"minutes")
             time.sleep(interval * 60)
             
     except Exception as e:
         print(f'Exception: {e}')
 
-        print("Will attempt reconnect in",wifi_retry,"minutes")
+        print("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
 
