@@ -12,9 +12,10 @@ import errno
 import ujson
 from machine import Pin
 from read_vsys import read_vsys
+import sys
 
 # Interval between measurements / retrys (minutes)
-interval = 15
+interval = 0.5
 wifi_retry = 5
 
 # MQTT details
@@ -58,7 +59,21 @@ def connect_to_wifi():
                 time.sleep(.1)
             pin.low()
             time.sleep(wifi_retry * 60)
-
+            
+# So that we can respond to messages on an MQTT topic, we need a callback
+# function that will handle the messages.
+def mqtt_subscription_callback(topic, message):
+    global interval
+    global callback
+    
+    callback = True
+    
+    print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message.decode("utf-8")}\"')  # Debug print out of what was received over MQTT
+    if topic == b'exit':
+        sys.exit()
+    
+    elif topic == b'interval':
+        interval=float(message)
 
 def connect_to_mqtt_server():
     """ setup client and connect to mqtt server """
@@ -75,7 +90,11 @@ def connect_to_mqtt_server():
         client_id = constants.mqtt_client_id,
         server = constants.mqtt_host,
         port = 1883)
-
+    
+    # Before connecting, tell the MQTT client to use the callback
+    print("Setting up call back")
+    mqtt_client.set_callback(mqtt_subscription_callback)
+    
     # Connect to the MQTT server
     print("Connecting to mqtt_client")
     mqtt_client.connect()
@@ -85,7 +104,9 @@ def connect_to_mqtt_server():
         
 # Loop infinitely
 while True:
- 
+    
+    global callback 
+     
     try: 
         # Connect to WiFi
         connect_to_wifi()
@@ -96,8 +117,21 @@ while True:
         # Setup client connection to mqtt server 
         mqtt_client = connect_to_mqtt_server()
         
+         # Once connected, subscribe to the MQTT topic
+        print("Subcribing")
+        mqtt_client.subscribe("exit")
+        mqtt_client.subscribe("interval")
+         
         # Commence loop over readings
         while True:
+            
+            # Check if any messages are waiting in q and pass all of them to the callback
+            while True:
+                callback = False
+                mqtt_client.check_msg()
+                if not callback:
+                    break
+           
             # Get weather readings in dictionary form
             raw=weather.get_readings()
             # Convert to JSON format
