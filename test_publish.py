@@ -15,11 +15,15 @@ from read_vsys import read_vsys
 import sys
 
 # Interval between measurements / retrys (minutes)
-interval = 0.5
+interval = 15
 wifi_retry = 5
 
 # MQTT details
 mqtt_publish_topic = "/weather"
+
+class ForceRestart(Exception):
+    """ Raised to force restart"""
+    pass
 
 # Connect to WiFi
 def connect_to_wifi():
@@ -60,9 +64,10 @@ def connect_to_wifi():
             pin.low()
             time.sleep(wifi_retry * 60)
             
-# So that we can respond to messages on an MQTT topic, we need a callback
-# function that will handle the messages.
+
 def mqtt_subscription_callback(topic, message):
+    """ So that we can respond to messages on an MQTT topic, we need a callback
+        function that will handle the messages."""
     global interval
     global callback
     
@@ -74,10 +79,12 @@ def mqtt_subscription_callback(topic, message):
     
     elif topic == b'interval':
         interval=float(message)
+        
+    elif topic == b'restart':
+        raise ForceRestart
 
 def connect_to_mqtt_server():
-    """ setup client and connect to mqtt server """
-    
+    """ Setup client and connect to mqtt server """
     #mqtt_client = MQTTClient(
     #        client_id=mqtt_client_id,
     #        server=mqtt_host,
@@ -101,10 +108,9 @@ def connect_to_mqtt_server():
     
     return mqtt_client
         
-        
 # Loop infinitely
 while True:
-    
+    """ Main loop"""
     global callback 
      
     try: 
@@ -121,6 +127,7 @@ while True:
         print("Subcribing")
         mqtt_client.subscribe("exit")
         mqtt_client.subscribe("interval")
+        mqtt_client.subscribe("restart")
          
         # Commence loop over readings
         while True:
@@ -147,8 +154,12 @@ while True:
 
             # Delay before next reading
             print("Next sample in",interval,"minutes")
-            time.sleep(interval * 60)
+            time.sleep(interval * 60)#
             
+    except ForceRestart as e:
+        print(f'Exception: {e}')
+        print("Will attempt to reconnect")       
+
     except Exception as e:
         print(f'Exception: {e}')
 
