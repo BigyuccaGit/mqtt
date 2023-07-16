@@ -11,19 +11,29 @@ import constants
 import errno
 import ujson
 from machine import Pin
+from machine import Timer
 from read_vsys import read_vsys
 import sys
 
 # Interval between measurements / retrys (minutes)
-interval = 15
+interval = 0.3
 wifi_retry = 5
 
 # MQTT details
 mqtt_publish_topic = "/weather"
 
+timer = Timer()
+
 class ForceRestart(Exception):
     """ Raised to force restart"""
     pass
+
+class NoAck(Exception):
+
+    pass
+    
+def TimerCallback(t):
+    print("Timer Callback", t)
 
 # Connect to WiFi
 def connect_to_wifi():
@@ -70,11 +80,19 @@ def mqtt_subscription_callback(topic, message):
         function that will handle the messages."""
     global interval
     global callback
+    global ack_received
+    global payload
     
     callback = True
     
-    print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message.decode("utf-8")}\"')  # Debug print out of what was received over MQTT
-    if topic == b'exit':
+    message_s = message.decode("utf-8")
+    print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message_s}\"')  # Debug print out of what was received over MQTT
+
+    if topic == b'/weather_ack':
+        ack_received = message_s.replace(" ","") == payload.replace(" ","")
+        print("ACK", ack_received, message_s.replace(" ",""), payload.replace(" ",""))
+        
+    elif topic == b'exit':
         sys.exit()
     
     elif topic == b'interval':
@@ -82,7 +100,15 @@ def mqtt_subscription_callback(topic, message):
         
     elif topic == b'restart':
         raise ForceRestart
-
+    
+def process_callbacks():
+    """ Process callbacks"""
+    while True:
+        callback = False
+        mqtt_client.check_msg()
+        if not callback:
+            break
+        
 def connect_to_mqtt_server():
     """ Setup client and connect to mqtt server """
     #mqtt_client = MQTTClient(
@@ -110,10 +136,19 @@ def connect_to_mqtt_server():
         
 # Loop infinitely
 while True:
+    
     """ Main loop"""
-    global callback 
+    
+    global callback
+    global payload
+    global ack_received
      
+    ack_received = False
+    payload=""
+
+    
     try: 
+
         # Connect to WiFi
         connect_to_wifi()
         
@@ -128,16 +163,17 @@ while True:
         mqtt_client.subscribe("exit")
         mqtt_client.subscribe("interval")
         mqtt_client.subscribe("restart")
-         
+        mqtt_client.subscribe("/weather_ack")
+        
+        time.sleep(1)
+        
+        #process_callbacks()
+        
         # Commence loop over readings
         while True:
             
             # Check if any messages are waiting in q and pass all of them to the callback
-            while True:
-                callback = False
-                mqtt_client.check_msg()
-                if not callback:
-                    break
+            process_callbacks()
            
             # Get weather readings in dictionary form
             raw=weather.get_readings()
@@ -147,6 +183,20 @@ while True:
             print("Publish weather", payload)
             mqtt_client.publish(mqtt_publish_topic, payload)
             
+  #          time.sleep(1)
+            # Look for ack
+  #          process_callbacks()
+  
+            ack_received = False
+            timer.init(mode=Timer.ONE_SHOT, period = 1000, callback = TimerCallback)
+            time.sleep(2)
+            mqtt_client.wait_msg()
+            print("ack_received", ack_received)
+            if not ack_received:
+                raise NoAck
+            
+            timer.deinit()
+                 
             # Publish aux data
             vsys = str(read_vsys())
             print("Publish vsys", vsys, "volts")
@@ -154,8 +204,8 @@ while True:
 
             # Delay before next reading
             print("Next sample in",interval,"minutes")
-            time.sleep(interval * 60)#
-            
+            time.sleep(interval * 60)#   
+           
     except ForceRestart as e:
         print(f'Exception: {e}')
         print("Will attempt to reconnect")       
