@@ -11,30 +11,23 @@ import constants
 import errno
 import ujson
 from machine import Pin
-from machine import Timer
 from read_vsys import read_vsys
 import sys
 
 # Interval between measurements / retrys (minutes)
-interval = 0.3
+interval = 15
 wifi_retry = 5
 
 # MQTT details
 mqtt_publish_topic = "/weather"
-
-timer = Timer()
 
 class ForceRestart(Exception):
     """ Raised to force restart"""
     pass
 
 class NoAck(Exception):
-
+    """ Raised to force restart"""
     pass
-    
-def TimerCallback(t):
-    print("Timer Callback", t)
-
 # Connect to WiFi
 def connect_to_wifi():
     """ Connect to wi fi """ 
@@ -83,8 +76,10 @@ def mqtt_subscription_callback(topic, message):
     global ack_received
     global payload
     
+    # Flag that callback happened
     callback = True
     
+    # Now process the subcription message
     message_s = message.decode("utf-8")
     print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message_s}\"')  # Debug print out of what was received over MQTT
 
@@ -143,10 +138,8 @@ while True:
     global payload
     global ack_received
      
-    ack_received = False
     payload=""
 
-    
     try: 
 
         # Connect to WiFi
@@ -165,11 +158,11 @@ while True:
         mqtt_client.subscribe("restart")
         mqtt_client.subscribe("/weather_ack")
         
+        print("Wait 1 second to settle")
         time.sleep(1)
         
-        #process_callbacks()
-        
         # Commence loop over readings
+        print("Commence reading loop")
         while True:
             
             # Check if any messages are waiting in q and pass all of them to the callback
@@ -183,19 +176,16 @@ while True:
             print("Publish weather", payload)
             mqtt_client.publish(mqtt_publish_topic, payload)
             
-  #          time.sleep(1)
+            # Allow time for ACK
+            time.sleep(1)
+            
             # Look for ack
-  #          process_callbacks()
-  
-            ack_received = False
-            timer.init(mode=Timer.ONE_SHOT, period = 1000, callback = TimerCallback)
-            time.sleep(2)
-            mqtt_client.wait_msg()
+            process_callbacks()
+            
+            # Force retry if no ack
             print("ack_received", ack_received)
             if not ack_received:
                 raise NoAck
-            
-            timer.deinit()
                  
             # Publish aux data
             vsys = str(read_vsys())
@@ -211,7 +201,7 @@ while True:
         print("Will attempt to reconnect")       
 
     except Exception as e:
-        print(f'Exception: {e}')
+        print(f'Exception: {repr(e)}')
 
         print("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
