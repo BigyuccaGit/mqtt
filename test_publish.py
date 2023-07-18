@@ -21,6 +21,9 @@ wifi_retry = 5
 # MQTT details
 mqtt_publish_topic = "/weather"
 
+ldr = machine.ADC(28)
+conv = 3.3/65535.0
+
 class ForceRestart(Exception):
     """ Raised to force restart"""
     pass
@@ -188,9 +191,12 @@ while True:
                 raise NoAck
                  
             # Publish aux data
-            vsys = str(read_vsys())
-            print("Publish vsys", vsys, "volts")
-            mqtt_client.publish("/voltage", vsys)
+            vsys = read_vsys()
+            light = ldr.read_u16() * conv
+            aux = {"Voltage": vsys, "Light" : light}
+            payload = ujson.dumps(aux) 
+            print("Publish vsys & light", vsys, light, "volts", payload)
+            mqtt_client.publish("/auxiliary", payload)
 
             # Delay before next reading
             print("Next sample in",interval,"minutes")
