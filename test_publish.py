@@ -21,10 +21,16 @@ wifi_retry = 5
 # MQTT details
 mqtt_publish_topic = "/weather"
 
+ldr = machine.ADC(28)
+conv = 3.3/65535.0
+
 class ForceRestart(Exception):
     """ Raised to force restart"""
     pass
 
+class NoAck(Exception):
+    """ Raised to force restart"""
+    pass
 # Connect to WiFi
 def connect_to_wifi():
     """ Connect to wi fi """ 
@@ -70,11 +76,21 @@ def mqtt_subscription_callback(topic, message):
         function that will handle the messages."""
     global interval
     global callback
+    global ack_received
+    global payload
     
+    # Flag that callback happened
     callback = True
     
-    print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message.decode("utf-8")}\"')  # Debug print out of what was received over MQTT
-    if topic == b'exit':
+    # Now process the subcription message
+    message_s = message.decode("utf-8")
+    print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message_s}\"')  # Debug print out of what was received over MQTT
+
+    if topic == b'/weather_ack':
+        ack_received = message_s.replace(" ","") == payload.replace(" ","")
+        print("ACK", ack_received, message_s.replace(" ",""), payload.replace(" ",""))
+        
+    elif topic == b'exit':
         sys.exit()
     
     elif topic == b'interval':
@@ -82,7 +98,15 @@ def mqtt_subscription_callback(topic, message):
         
     elif topic == b'restart':
         raise ForceRestart
-
+    
+def process_callbacks():
+    """ Process callbacks"""
+    while True:
+        callback = False
+        mqtt_client.check_msg()
+        if not callback:
+            break
+        
 def connect_to_mqtt_server():
     """ Setup client and connect to mqtt server """
     #mqtt_client = MQTTClient(
@@ -110,10 +134,17 @@ def connect_to_mqtt_server():
         
 # Loop infinitely
 while True:
+    
     """ Main loop"""
-    global callback 
+    
+    global callback
+    global payload
+    global ack_received
      
+    payload=""
+
     try: 
+
         # Connect to WiFi
         connect_to_wifi()
         
@@ -128,16 +159,17 @@ while True:
         mqtt_client.subscribe("exit")
         mqtt_client.subscribe("interval")
         mqtt_client.subscribe("restart")
-         
+        mqtt_client.subscribe("/weather_ack")
+        
+        print("Wait 1 second to settle")
+        time.sleep(1)
+        
         # Commence loop over readings
+        print("Commence reading loop")
         while True:
             
             # Check if any messages are waiting in q and pass all of them to the callback
-            while True:
-                callback = False
-                mqtt_client.check_msg()
-                if not callback:
-                    break
+            process_callbacks()
            
             # Get weather readings in dictionary form
             raw=weather.get_readings()
@@ -147,21 +179,35 @@ while True:
             print("Publish weather", payload)
             mqtt_client.publish(mqtt_publish_topic, payload)
             
+            # Allow time for ACK
+            time.sleep(1)
+            
+            # Look for ack
+            process_callbacks()
+            
+            # Force retry if no ack
+            print("ack_received", ack_received)
+            if not ack_received:
+                raise NoAck
+                 
             # Publish aux data
-            vsys = str(read_vsys())
-            print("Publish vsys", vsys, "volts")
-            mqtt_client.publish("/voltage", vsys)
+            vsys = read_vsys()
+            light = ldr.read_u16() * conv
+            aux = {"Voltage": vsys, "Light" : light}
+            payload = ujson.dumps(aux) 
+            print("Publish vsys & light", vsys, light, "volts", payload)
+            mqtt_client.publish("/auxiliary", payload)
 
             # Delay before next reading
             print("Next sample in",interval,"minutes")
-            time.sleep(interval * 60)#
-            
+            time.sleep(interval * 60)#   
+           
     except ForceRestart as e:
         print(f'Exception: {e}')
         print("Will attempt to reconnect")       
 
     except Exception as e:
-        print(f'Exception: {e}')
+        print(f'Exception: {repr(e)}')
 
         print("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
