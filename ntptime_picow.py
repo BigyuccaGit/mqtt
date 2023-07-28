@@ -5,7 +5,7 @@
 # Timeouts return a time of 0. These happen: caller should check for this.
 # Replace socket timeout with select.poll as per docs:
 # http://docs.micropython.org/en/latest/library/socket.html#socket.socket.settimeout
-
+ 
 import socket
 import struct
 import select
