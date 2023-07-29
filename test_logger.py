@@ -1,6 +1,4 @@
-from logger import LOGGER
-
-logger=LOGGER()
+import logger
 
 logger.info("Hello", "World")
 logger.warn("The", "quick", "brown", "fox")
