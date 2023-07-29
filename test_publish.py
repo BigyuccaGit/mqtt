@@ -2,7 +2,8 @@
 A simple example that connects to the MQTT server and publishes
 a JSON string of sensed temperature, pressure and humidity
 """
-print("Starting")
+import logger
+logger.info("Starting ===================================")
 from weather import WEATHER
 import network
 import time
@@ -13,6 +14,8 @@ import ujson
 from machine import Pin
 from read_vsys import read_vsys
 import sys
+import ntptime_picow
+
 
 # Interval between measurements / retrys (minutes)
 interval = 15
@@ -47,14 +50,14 @@ def connect_to_wifi():
         while count > 0:
             connected = wlan.isconnected()
             if not connected:
-                print('Waiting for connection...', count)
+                logger.info('Waiting for connection...', count)
                 pin.toggle()
                 time.sleep(1)
                 count -= 1
                 
             else:
                 ip = wlan.ifconfig()[0]
-                print("Connected",ip,"to WiFi")
+                logger.info("Connected",ip,"to WiFi")
                 break
 
         pin.low()
@@ -63,7 +66,7 @@ def connect_to_wifi():
         if not connected:
             
             # Wait a bit then try again
-            print("Will retry wifi in", wifi_retry,"minutes")
+            logger.warn("Will retry wifi in", wifi_retry,"minutes")
             for i in range(10):
                 pin.toggle()
                 time.sleep(.1)
@@ -82,13 +85,13 @@ def mqtt_subscription_callback(topic, message):
     # Flag that callback happened
     callback = True
     
-    # Now process the subcription message
+    # Now process the subscription message
     message_s = message.decode("utf-8")
-    print (f'Topic \"{topic.decode("utf-8")}\" received message \"{message_s}\"')  # Debug print out of what was received over MQTT
+    logger.info(f'Topic \"{topic.decode("utf-8")}\", message \"{message_s}\"')  # Debug print out of what was received over MQTT
 
     if topic == b'/weather_ack':
         ack_received = message_s.replace(" ","") == payload.replace(" ","")
-        print("ACK", ack_received, message_s.replace(" ",""), payload.replace(" ",""))
+        logger.info("ACK", ack_received, payload.replace(" ",""))
         
     elif topic == b'exit':
         sys.exit()
@@ -116,18 +119,18 @@ def connect_to_mqtt_server():
     #        password=mqtt_password)
     # Initialize the MQTTClient 
 
-    print("Setting up mqtt client")
+    logger.info("Setting up mqtt client")
     mqtt_client = MQTTClient(
         client_id = constants.mqtt_client_id,
         server = constants.mqtt_host,
         port = 1883)
     
     # Before connecting, tell the MQTT client to use the callback
-    print("Setting up call back")
+    logger.info("Setting up call back")
     mqtt_client.set_callback(mqtt_subscription_callback)
     
     # Connect to the MQTT server
-    print("Connecting to mqtt_client")
+    logger.info("Connecting to mqtt_client")
     mqtt_client.connect()
     
     return mqtt_client
@@ -148,6 +151,12 @@ while True:
         # Connect to WiFi
         connect_to_wifi()
         
+        # Get NTP time
+        ntptime_picow.settime()
+        
+        # Ensure logger exists
+        logger.init()
+        
         # Set up call to weather sensor
         weather = WEATHER()
 
@@ -155,17 +164,17 @@ while True:
         mqtt_client = connect_to_mqtt_server()
         
          # Once connected, subscribe to the MQTT topic
-        print("Subcribing")
+        logger.info("subscribing")
         mqtt_client.subscribe("exit")
         mqtt_client.subscribe("interval")
         mqtt_client.subscribe("restart")
         mqtt_client.subscribe("/weather_ack")
         
-        print("Wait 1 second to settle")
+        logger.info("Wait 1 second to settle")
         time.sleep(1)
         
         # Commence loop over readings
-        print("Commence reading loop")
+        logger.info("Commence reading loop")
         while True:
             
             # Check if any messages are waiting in q and pass all of them to the callback
@@ -176,7 +185,7 @@ while True:
             # Convert to JSON format
             payload = ujson.dumps(raw)            
             # Publish the data
-            print("Publish weather", payload)
+            logger.info("Publish weather", payload)
             mqtt_client.publish(mqtt_publish_topic, payload)
             
             # Allow time for ACK
@@ -186,29 +195,33 @@ while True:
             process_callbacks()
             
             # Force retry if no ack
-            print("ack_received", ack_received)
+            logger.info("ack_received", ack_received)
             if not ack_received:
                 raise NoAck
+            else:
+                for line in logger.iterate():
+                    mqtt_client.publish("/pico_log", line)
+                logger.clear()
                  
             # Publish aux data
             vsys = read_vsys()
             light = ldr.read_u16() * conv
             aux = {"Voltage": vsys, "Light" : light}
             payload = ujson.dumps(aux) 
-            print("Publish vsys & light", vsys, light, "volts", payload)
+            logger.info("Publish vsys & light", vsys, light, "volts", payload)
             mqtt_client.publish("/auxiliary", payload)
 
             # Delay before next reading
-            print("Next sample in",interval,"minutes")
+            logger.info("Next sample in",interval,"minutes")
             time.sleep(interval * 60)#   
            
     except ForceRestart as e:
-        print(f'Exception: {e}')
-        print("Will attempt to reconnect")       
+        logger.error(f'Exception: {e}')
+        logger.error("Will attempt to reconnect")       
 
     except Exception as e:
-        print(f'Exception: {repr(e)}')
+        logger.error(f'Exception: {repr(e)}')
 
-        print("Will attempt to reconnect in",wifi_retry,"minutes")
+        logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
 

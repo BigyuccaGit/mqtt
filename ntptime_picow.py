@@ -14,6 +14,7 @@ import errno
 import machine
 import time
 from time import sleep
+import logger
 
 # (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
 # (date(1970, 1, 1) - date(1900, 1, 1)).days * 24*60*60
@@ -52,12 +53,14 @@ def gettime(hrs_offset=0):  # Local time offset in hrs relative to UTC
 
 def settime(hrs_offset=0):
     while True:
+        logger.info("Trying to get NTP time")
         time_ntp = gettime()
         if time_ntp != 0:
             break
         else:
-            print("Timout obtaining NTP time, retrying ...")
+            logger.warn("Timout obtaining NTP time, retrying ...")
             sleep(1.0)
-        
+     
     year, month, mday, hour, minute, second, _, _ = time.localtime(time_ntp)
     machine.RTC().datetime((year, month, mday, 0, hour + hrs_offset, minute,second,0))
+    logger.info("Time set to {0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}".format(year, month, mday, hour + hrs_offset, minute,second))

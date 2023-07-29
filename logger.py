@@ -11,7 +11,7 @@ def log(level, text):
  #   datetime = "{0:04d}-{1:02d}-{2:02d} {4:02d}:{5:02d}:{6:02d}".format(*dt)
     datetime = "{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}".format(*dt)
     log_entry = "{0} [{1:7} /{2:>8}] {3} {4}".format(datetime, level, gc.mem_free(), text,  os.stat(_logfile_)[6])
-    print(log_entry, len(log_entry)+1)
+    print(log_entry)
     with open(_logfile_, "a") as f:
         f.write(log_entry + '\n')
 
@@ -35,6 +35,17 @@ def iterate():
     with open(_logfile_, "r") as f:
         for line in f:
             yield line.strip("\n")
+            
+def exists():
+    return _logfile_ in os.listdir()
+
+def init():
+    if exists():
+        info("Log file exists")
+        return
+    else:
+        info("Creating empty log file")
+        clear()
         
    
         
