@@ -3,6 +3,8 @@ A simple example that connects to the MQTT server and publishes
 a JSON string of sensed temperature, pressure and humidity
 """
 import logger
+# Ensure logger exists
+logger.init()
 logger.info("Starting ===================================")
 from weather import WEATHER
 import network
@@ -15,7 +17,8 @@ from machine import Pin
 from read_vsys import read_vsys
 import sys
 import ntptime_picow
-
+from oserror import errortext
+import os
 
 # Interval between measurements / retrys (minutes)
 interval = 15
@@ -29,6 +32,10 @@ conv = 3.3/65535.0
 
 class ForceRestart(Exception):
     """ Raised to force restart"""
+    pass
+
+class ForceExit(Exception):
+    """ Raised to force exit"""
     pass
 
 class NoAck(Exception):
@@ -79,7 +86,7 @@ def mqtt_subscription_callback(topic, message):
         function that will handle the messages."""
     global interval
     global callback
-    global ack_received
+    global ack_valid
     global payload
     
     # Flag that callback happened
@@ -90,11 +97,14 @@ def mqtt_subscription_callback(topic, message):
     logger.info(f'Topic \"{topic.decode("utf-8")}\", message \"{message_s}\"')  # Debug print out of what was received over MQTT
 
     if topic == b'/weather_ack':
-        ack_received = message_s.replace(" ","") == payload.replace(" ","")
-        logger.info("ACK", ack_received, payload.replace(" ",""))
+        ack_valid = message_s.replace(" ","") == payload.replace(" ","")
+        if ack_valid:
+            logger.info("ACK", ack_valid, payload.replace(" ",""))
+        else:
+            logger.info("ACK", ack_valid, message_s.replace(" ",""), payload.replace(" ",""))               
         
     elif topic == b'exit':
-        sys.exit()
+        raise ForceExit
     
     elif topic == b'interval':
         interval=float(message)
@@ -142,24 +152,24 @@ while True:
     
     global callback
     global payload
-    global ack_received
+    global ack_valid
      
     payload=""
-
+    
+    # Set up call to weather sensor
+    logger.info("Setting up weather sensor")
+    weather = WEATHER()
+    
     try: 
 
+  #      os.mkdir("dummydir")
+        
         # Connect to WiFi
         connect_to_wifi()
         
         # Get NTP time
         ntptime_picow.settime()
         
-        # Ensure logger exists
-        logger.init()
-        
-        # Set up call to weather sensor
-        weather = WEATHER()
-
         # Setup client connection to mqtt server 
         mqtt_client = connect_to_mqtt_server()
         
@@ -195,8 +205,8 @@ while True:
             process_callbacks()
             
             # Force retry if no ack
-            logger.info("ack_received", ack_received)
-            if not ack_received:
+            logger.info("ack_valid", ack_valid)
+            if not ack_valid:
                 raise NoAck
             else:
                 for line in logger.iterate():
@@ -217,11 +227,25 @@ while True:
            
     except ForceRestart as e:
         logger.error(f'Exception: {e}')
-        logger.error("Will attempt to reconnect")       
-
-    except Exception as e:
-        logger.error(f'Exception: {repr(e)}')
+        logger.error("Will attempt to reconnect")
+        
+    except OSError as e:
+        logger.error(f'OSError: {e} -> {errortext[e.errno]}')
+  #      logger.error(f'OSError: {e}')
 
         logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
+        
+    except ForceExit as e:
+        logger.error(f'Exception: {e}')
+        raise KeyboardInterrupt      
+        
+    except Exception as e:
+        logger.error(f'Exception: {e} {repr(e)}')
+
+        logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
+        time.sleep(wifi_retry * 60)
+
+
+    
 
