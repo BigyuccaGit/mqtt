@@ -19,10 +19,18 @@ import sys
 import ntptime_picow
 from oserror import errortext
 import os
+from low_pass_filter import LOW_PASS_FILTER as LPF
 
 # Interval between measurements / retrys (minutes)
-interval = 15
+interval = 0.2
 wifi_retry = 5
+
+# Low pass filtering
+v_lpf = LPF()
+l_lpf = LPF()
+t_lpf = LPF()
+p_lpf = LPF()
+h_lpf = LPF()
 
 # MQTT details
 mqtt_publish_topic = "/weather"
@@ -41,6 +49,7 @@ class ForceExit(Exception):
 class NoAck(Exception):
     """ Raised to force restart"""
     pass
+import network
 # Connect to WiFi
 def connect_to_wifi():
     """ Connect to wi fi """ 
@@ -192,6 +201,12 @@ while True:
            
             # Get weather readings in dictionary form
             raw=weather.get_readings()
+            
+            # Perform low pass filtering and add
+            raw['T_LPF'] = t_lpf.calc(raw["Temperature"])
+            raw['P_LPF'] = p_lpf.calc(raw["Pressure"])
+            raw['H_LPF'] = h_lpf.calc(raw["Humidity %"])
+ 
             # Convert to JSON format
             payload = ujson.dumps(raw)            
             # Publish the data
@@ -216,7 +231,9 @@ while True:
             # Publish aux data
             vsys = read_vsys()
             light = ldr.read_u16() * conv
-            aux = {"Voltage": vsys, "Light" : light}
+            v_filt = v_lpf.calc(vsys)
+            l_filt = l_lpf.calc(light)
+            aux = {"Voltage": vsys, "Light" : light, "V_LPF": v_filt, "L_LPF": l_filt}
             payload = ujson.dumps(aux) 
             logger.info("Publish vsys & light", vsys, light, "volts", payload)
             mqtt_client.publish("/auxiliary", payload)
@@ -238,10 +255,13 @@ while True:
         
     except ForceExit as e:
         logger.error(f'Exception: {e}')
-        raise KeyboardInterrupt      
+        raise KeyboardInterrupt
+    
+    except KeyboardInterrupt as e:
+        raise KeyboardInterrupt
         
     except Exception as e:
-        logger.error(f'Exception: {e} {repr(e)}')
+        logger.error(f'Unanticipated Exception: {e} {repr(e)}')
 
         logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
