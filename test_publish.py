@@ -22,7 +22,7 @@ import os
 from low_pass_filter import LOW_PASS_FILTER as LPF
 
 # Interval between measurements / retrys (minutes)
-interval = 0.2
+interval = 15
 wifi_retry = 5
 
 # Low pass filtering
