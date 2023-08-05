@@ -154,25 +154,24 @@ def connect_to_mqtt_server():
     
     return mqtt_client
         
-# Loop infinitely
+global callback
+global payload
+global ack_valid
+ 
+payload=""
+
+# Set up call to weather sensor
+logger.info("Setting up weather sensor")
+weather = WEATHER()
+
+time.sleep(1)
+
+# Loop infinitely 
 while True:
     
     """ Main loop"""
-    
-    global callback
-    global payload
-    global ack_valid
-     
-    payload=""
-    
-    # Set up call to weather sensor
-    logger.info("Setting up weather sensor")
-    weather = WEATHER()
-    
     try: 
 
-  #      os.mkdir("dummydir")
-        
         # Connect to WiFi
         connect_to_wifi()
         
@@ -194,13 +193,21 @@ while True:
         
         # Commence loop over readings
         logger.info("Commence reading loop")
+        
+        discard = True
         while True:
             
             # Check if any messages are waiting in q and pass all of them to the callback
             process_callbacks()
            
-            # Get weather readings in dictionary form
-            raw=weather.get_readings()
+            # Get weather readings in dictionary form (discarding 1st reading)
+            if discard:
+                logger.info("Discarding 1st set of readings")
+                raw=weather.get_readings()
+                time.sleep(1)
+                discard = False
+                
+            raw=weather.get_readings()   
             
             # Perform low pass filtering and add
             raw['T_FILTER'] = t_filter.calc(raw["Temperature"])
@@ -243,7 +250,7 @@ while True:
             time.sleep(interval * 60)#   
            
     except ForceRestart as e:
-        logger.error(f'Exception: {e}')
+        logger.error(f'ForceRestart Exception: {e} {repr(e)}')
         logger.error("Will attempt to reconnect")
         
     except OSError as e:
@@ -254,15 +261,20 @@ while True:
         time.sleep(wifi_retry * 60)
         
     except ForceExit as e:
-        logger.error(f'Exception: {e}')
+        logger.error(f'Force Exit Exception: {e} {repr(e)}')
         raise KeyboardInterrupt
+    
+    except NoAck as e:
+        logger.error(f'NoAck Exception: {e} {repr(e)}')
+
+        logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
+        time.sleep(wifi_retry * 60)
     
     except KeyboardInterrupt as e:
         raise KeyboardInterrupt
         
     except Exception as e:
         logger.error(f'Unanticipated Exception: {e} {repr(e)}')
-
         logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
 
