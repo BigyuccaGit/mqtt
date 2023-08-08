@@ -3,13 +3,13 @@ import math
 import time
 import random
 
-lpf = LPF(0.85)
+lpf = LPF()
 
 angle = 0.0
 while True:
     
     data = math.sin(angle  * math.pi/180.0) + random.randrange(-1, 1) *0.1
-    data = 1 + random.gauss(0, 0.2)
+    data = 1 + random.uniform(0, 0.02)
     result = lpf.calc(data)
     
     print("DATA", data, 'LPF', result)
