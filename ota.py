@@ -18,9 +18,9 @@ class OTAUpdater:
         elif "github.com" in self.repo_url:
             print(f"Updating {repo_url} to raw.githubusercontent'")
             self.repo_url = self.repo_url.replace("github","raw.githubusercontent")            
-        self.version_url = self.repo_url + 'main/version.json'
+        self.version_url = self.repo_url + 'master/' + 'version.json'
         print(f"version url is: {self.version_url}")
-        self.firmware_url = self.repo_url + 'main/' + filename
+        self.firmware_url = self.repo_url + 'master/'+ filename
 
         # get the current version (stored in version.json)
         if 'version.json' in os.listdir():    
@@ -101,7 +101,7 @@ class OTAUpdater:
 
         print(f'Checking for latest version... on {self.version_url}')
         response = urequests.get(self.version_url)
-        
+        print(response.text)
         data = json.loads(response.text)
         
         print(f"data is: {data}, url is: {self.version_url}")
