@@ -20,10 +20,14 @@ import ntptime_picow
 from oserror import errortext
 import os
 from median_filter import MEDIAN_FILTER as MDF
+import network
 
 # Interval between measurements / retrys (minutes)
 interval = 15
 wifi_retry = 5
+
+# Other intervals
+ack_delay = 2 # N.B. seconds
 
 # Low pass filtering
 v_filter = MDF()
@@ -49,7 +53,8 @@ class ForceExit(Exception):
 class NoAck(Exception):
     """ Raised to force restart"""
     pass
-import network
+
+
 # Connect to WiFi
 def connect_to_wifi():
     """ Connect to wi fi """ 
@@ -221,7 +226,7 @@ while True:
             mqtt_client.publish(mqtt_publish_topic, payload)
             
             # Allow time for ACK
-            time.sleep(1)
+            time.sleep(ack_delay)
             
             # Look for ack
             process_callbacks()
@@ -229,7 +234,7 @@ while True:
             # Force retry if no ack
             logger.info("ack_valid", ack_valid)
             if not ack_valid:
-                raise NoAck
+                raise NoAck(payload)
             else:
                 for line in logger.iterate():
                     mqtt_client.publish("/pico_log", line)
@@ -265,7 +270,7 @@ while True:
         raise KeyboardInterrupt
     
     except NoAck as e:
-        logger.error(f'NoAck Exception: {e} {repr(e)}')
+        logger.error(f'NoAck Exception: {repr(e)}')
 
         logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
         time.sleep(wifi_retry * 60)
