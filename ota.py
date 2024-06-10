@@ -1,17 +1,13 @@
-import network
 import urequests
 import os
 import json
 import machine
-from time import sleep
 
 class OTAUpdater:
     
     """ This class handles OTA updates. It connects to the Wi-Fi, checks for updates, downloads and installs them."""
-    def __init__(self, ssid, password, repo_url, filename):
+    def __init__(self, repo_url, filename):
         self.filename = filename
-        self.ssid = ssid
-        self.password = password
         self.repo_url = repo_url
         self.origin ="master/"
         if "www.github.com" in self.repo_url :
@@ -35,17 +31,6 @@ class OTAUpdater:
             # save the current version
             with open('version.json', 'w') as f:
                 json.dump({'version': self.current_version_in_memory}, f)
-            
-    def connect_wifi(self):
-        """ Connect to Wi-Fi."""
-
-        sta_if = network.WLAN(network.STA_IF)
-        sta_if.active(True)
-        sta_if.connect(self.ssid, self.password)
-        while not sta_if.isconnected():
-            print('.', end="")
-            sleep(0.25)
-        print(f'Connected to WiFi, IP is: {sta_if.ifconfig()[0]}')
         
     def fetch_latest_code_from_repo(self)->bool:
         """ Fetch the latest code from the repo, returns False if not found."""
@@ -97,9 +82,6 @@ class OTAUpdater:
         
     def check_for_updates(self):
         """ Check if updates are available."""
-        
-        # Connect to Wi-Fi
-        self.connect_wifi()
 
         print(f'Checking for latest version... on {self.version_on_repo_url}')
         response = urequests.get(self.version_on_repo_url)
