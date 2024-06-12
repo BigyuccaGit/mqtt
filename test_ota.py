@@ -21,3 +21,5 @@ repo_url = "https://github.com/BigyuccaGit/mqtt/"#"https://github.com/kevinmcale
 ota_updater = OTAUpdater(repo_url, "dummy.py")
 
 ota_updater.download_and_install_update_if_available()
+
+ota_updater.loop_over_updates()

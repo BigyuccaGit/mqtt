@@ -100,19 +100,7 @@ class OTAUpdater:
 ####
         
 ####
-        print(f'Checking for latest versions... on {self.versions_on_repo_url}')
-        response = urequests.get(self.versions_on_repo_url)
-        print(response.text)
-        data2 = json.loads(response.text)
-        
-        print(f"data is: {data2}, url is: {self.versions_on_repo_url}")
-        
-        l=[k for k in data2]
-        # place main.py at end of list
-        l.sort(key=lambda f:0 if f != "main.py" else 1)
-        print(f"data version is: {l}")
-        for k in l:
-            print(f"{k} : {data2[k]}")
+
         # Turn list to dict using dictionary comprehension
 #         my_dict = {data[i]: data[i + 1] for i in range(0, len(data), 2)}
         
@@ -133,3 +121,45 @@ class OTAUpdater:
                 self.update_and_reset() 
         else:
             print('No new updates available.')
+            
+    def loop_over_updates(self):
+        
+        print(f'Checking for latest versions... on {self.versions_on_repo_url}')
+        response = urequests.get(self.versions_on_repo_url)
+        print(response.text)
+        data2 = json.loads(response.text)
+        
+        print(f"data is: {data2}, url is: {self.versions_on_repo_url}")
+        
+        l=[k for k in data2]
+        # place main.py at end of list
+        l.sort(key=lambda f:0 if f != "main.py" else 1)
+        print(f"data version is: {l}")
+        for filename in l:
+            self.latest_version_from_repo = int(data2[filename])
+            print(f"{filename} : {self.latest_version_from_repo}")
+            self.filename_on_repo_url = self.repo_url + self.origin + filename
+            print(f"Remote file is {self.filename_on_repo_url}")
+            local_version_filename = filename + ".version.json"
+            print(f"Local version file is : {local_version_filename}")
+            
+            if local_version_filename in os.listdir():    
+                with open(local_version_filename) as f:
+                    self.current_version_in_memory = int(json.load(f)['version'])
+                print(f"Current device filename version is '{self.current_version_in_memory}'")
+
+            else:
+                self.current_version_in_memory = 0
+                # save the current version
+                with open(local_version_filename, 'w') as f:
+                    print(f"Writing default local version file : {local_version_filename}")
+                    json.dump({'version': self.current_version_in_memory}, f)
+                    
+                   # compare versions
+            newer_version_available = True if self.current_version_in_memory < self.latest_version_from_repo else False
+        
+            print(f'Newer version of \'{filename}\' available: {newer_version_available}')    
+        
+ 
+                    
+                    
