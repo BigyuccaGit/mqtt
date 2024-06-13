@@ -9,6 +9,8 @@ class OTAUpdater:
     def __init__(self, repo_url, filename):
         self.filename = filename
         self.repo_url = repo_url
+        self.latest_version_from_repo = 0
+        self.local_version_filename=""
         self.origin ="master/"
         if "www.github.com" in self.repo_url :
             print(f"Updating {repo_url} to raw.githubusercontent")
@@ -40,7 +42,7 @@ class OTAUpdater:
         # Fetch the latest code from the repo.
         response = urequests.get(self.filename_on_repo_url)
         if response.status_code == 200:
-            print(f'Fetched latest filename code from repo, status: {response.status_code}, -  {response.text}')
+            print(f'Fetched latest filename code from repo, status: {response.status_code}')
     
             # Save the fetched code to memory
             self.latest_code_from_repo = response.text
@@ -61,7 +63,8 @@ class OTAUpdater:
         self.current_version_in_memory = self.latest_version_from_repo
 
         # save the current version
-        with open('version.json', 'w') as f:
+        print("local_version_filename", self.local_version_filename)
+        with open(self.local_version_filename, 'w') as f:
             json.dump({'version': self.current_version_in_memory}, f)
         
         # free up some memory
@@ -76,18 +79,19 @@ class OTAUpdater:
         print(f"Updating device... (Renaming latest_code_from_repo.py to {self.filename})", end="")
 
         # Overwrite the old code.
-        os.rename('latest_code_from_repo.py', self.filename)  
+        os.rename('latest_code_from_repo.py', self.filename)
+        self.restart_required = True
 
         # Restart the device to run the new code.
-        print('Restarting device...')
-        machine.reset()  # Reset the device to run the new code.
+#        print('/nRestarting device...')
+#       machine.reset()  # Reset the device to run the new code.
         
     def check_for_updates(self):
         """ Check if updates are available."""
 ####
         print(f'Checking for latest version... on {self.version_on_repo_url}')
         response = urequests.get(self.version_on_repo_url)
-        print(response.text)
+ #       print(response.text)
         data = json.loads(response.text)
         
         print(f"data is: {data}, url is: {self.version_on_repo_url}")
@@ -121,12 +125,11 @@ class OTAUpdater:
                 self.update_and_reset() 
         else:
             print('No new updates available.')
-            
-    def loop_over_updates(self):
-        
+ 
+    def ordered_list_of_files_and_versions(self):
         print(f'Checking for latest versions... on {self.versions_on_repo_url}')
         response = urequests.get(self.versions_on_repo_url)
-        print(response.text)
+ #       print(response.text)
         data2 = json.loads(response.text)
         
         print(f"data is: {data2}, url is: {self.versions_on_repo_url}")
@@ -135,31 +138,52 @@ class OTAUpdater:
         # place main.py at end of list
         l.sort(key=lambda f:0 if f != "main.py" else 1)
         print(f"data version is: {l}")
+        
+        lfv=[]
         for filename in l:
-            self.latest_version_from_repo = int(data2[filename])
-            print(f"{filename} : {self.latest_version_from_repo}")
-            self.filename_on_repo_url = self.repo_url + self.origin + filename
-            print(f"Remote file is {self.filename_on_repo_url}")
-            local_version_filename = filename + ".version.json"
-            print(f"Local version file is : {local_version_filename}")
+            lfv.append((filename,int(data2[filename])))
             
-            if local_version_filename in os.listdir():    
-                with open(local_version_filename) as f:
-                    self.current_version_in_memory = int(json.load(f)['version'])
-                print(f"Current device filename version is '{self.current_version_in_memory}'")
+        return lfv
+    
+    def newer_version(self, filename, version):
+        self.latest_version_from_repo = version
+        print(f"{filename} : {self.latest_version_from_repo}")
+        self.filename_on_repo_url = self.repo_url + self.origin + filename
+        print(f"Remote file is {self.filename_on_repo_url}")
+        self.local_version_filename = filename + ".version.json"
+        print(f"Local version file is : {self.local_version_filename}")
+        
+        if self.local_version_filename in os.listdir():    
+            with open(self.local_version_filename) as f:
+                self.current_version_in_memory = int(json.load(f)['version'])
+            print(f"Current device filename version is '{self.current_version_in_memory}'")
 
+        else:
+            self.current_version_in_memory = 0
+            # save the current version
+            with open(local_version_filename, 'w') as f:
+                print(f"Writing default local version file : {local_version_filename}")
+                json.dump({'version': self.current_version_in_memory}, f)
+                
+        # compare versions
+        newer_version_available = True if self.current_version_in_memory < self.latest_version_from_repo else False
+    
+        print(f'Newer version of \'{filename}\' available: {newer_version_available}')
+        
+        return newer_version_available
+            
+    def loop_over_updates(self):
+
+        self.restart_required = False
+        for filename, version in self.ordered_list_of_files_and_versions():
+            if self.newer_version(filename, version):
+                if self.fetch_latest_code_from_repo():
+                    self.update_no_reset() 
+                    self.update_and_reset() 
             else:
-                self.current_version_in_memory = 0
-                # save the current version
-                with open(local_version_filename, 'w') as f:
-                    print(f"Writing default local version file : {local_version_filename}")
-                    json.dump({'version': self.current_version_in_memory}, f)
-                    
-                   # compare versions
-            newer_version_available = True if self.current_version_in_memory < self.latest_version_from_repo else False
-        
-            print(f'Newer version of \'{filename}\' available: {newer_version_available}')    
-        
- 
+                print('No new updates available.')
+                
+        if self.restart_required:
+            print("Restarting...")
                     
                     
