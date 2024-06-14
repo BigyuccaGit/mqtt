@@ -134,8 +134,8 @@ class OTAUpdater:
         else:
             self.current_version_in_memory = 0
             # save the current version
-            with open(local_version_filename, 'w') as f:
-                print(f"Writing default local version file : {local_version_filename}")
+            with open(self.local_version_filename, 'w') as f:
+                print(f"Writing default local version file : {self.local_version_filename}")
                 json.dump({'version': self.current_version_in_memory}, f)
                 
         # compare versions
