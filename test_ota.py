@@ -18,7 +18,7 @@ connect_wifi(ssid, password)
 
 repo_url = "https://github.com/BigyuccaGit/mqtt/"#"https://github.com/kevinmcaleer/ota_test/main/"
 
-ota_updater = OTAUpdater(repo_url, "dummy.py")
+ota_updater = OTAUpdater(repo_url)
 
 #ota_updater.download_and_install_update_if_available()
 
