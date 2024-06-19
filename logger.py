@@ -50,11 +50,11 @@ def exists():
 
 def init():
     if exists():
-        info("Log file exists")
+        info(f"Log file '{_logfile_}' exists")
         return
     else:
         clear()
-        info("Created empty log file")
+        info(f"Created empty log file: {_logfile_}")
         
    
         

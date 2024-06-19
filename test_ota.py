@@ -2,6 +2,7 @@ from ota import OTAUpdater
 from constants import ssid, password
 import network
 from time import sleep
+import logger
 
 def connect_wifi(ssid, password):
     """ Connect to Wi-Fi."""
@@ -18,6 +19,7 @@ connect_wifi(ssid, password)
 
 repo_url = "https://github.com/BigyuccaGit/mqtt/"#"https://github.com/kevinmcaleer/ota_test/main/"
 
+logger.init()
 ota_updater = OTAUpdater(repo_url)
 
 #ota_updater.download_and_install_update_if_available()
