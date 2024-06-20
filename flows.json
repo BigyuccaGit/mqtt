@@ -1147,5 +1147,34 @@
         "x": 510,
         "y": 320,
         "wires": []
+    },
+    {
+        "id": "5ac5a5b4dd13baf6",
+        "type": "inject",
+        "z": "628331a6068098e1",
+        "name": "OTA",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "ota",
+        "payload": "",
+        "payloadType": "str",
+        "x": 90,
+        "y": 80,
+        "wires": [
+            [
+                "0740752a03442129"
+            ]
+        ]
     }
 ]
