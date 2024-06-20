@@ -65,6 +65,7 @@ class OTAUpdater:
         # Overwrite the old code.
         os.rename('latest_code_from_repo.py', self.filename)
         self.restart_required = True
+        logger.info(f"Restart: {self.restart_required}")
 
     def save_code_and_update_version_file(self):
 
@@ -162,6 +163,6 @@ class OTAUpdater:
                 
         if self.restart_required:
             logger.info("Restarting...")
-    #       machine.reset()  # Reset the device to run the new code.
+            machine.reset()  # Reset the device to run the new code.
                     
                     

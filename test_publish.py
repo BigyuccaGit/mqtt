@@ -21,10 +21,11 @@ from oserror import errortext
 import os
 from median_filter import MEDIAN_FILTER as MDF
 import network
+from ota import OTAUpdater
 
 # Interval between measurements / retrys (minutes)
-interval = 15
-wifi_retry = 5
+interval = 2
+wifi_retry = 1
 
 # Other intervals
 ack_delay = 2 # N.B. seconds
@@ -126,6 +127,16 @@ def mqtt_subscription_callback(topic, message):
     elif topic == b'restart':
         raise ForceRestart
     
+    elif topic == b'ota':
+        logger.info("OTA command received")
+        
+        repo_url = "https://github.com/BigyuccaGit/mqtt/"#"https://github.com/kevinmcaleer/ota_test/main/"
+        ota_updater = OTAUpdater(repo_url)
+        ota_updater.loop_over_updates()
+        
+    else:
+        logger.error(f"Unknown topic {topic} received")
+    
 def process_callbacks():
     """ Process callbacks"""
     while True:
@@ -191,6 +202,7 @@ while True:
         mqtt_client.subscribe("exit")
         mqtt_client.subscribe("interval")
         mqtt_client.subscribe("restart")
+        mqtt_client.subscribe("ota")
         mqtt_client.subscribe("/weather_ack")
         
         logger.info("Wait 1 second to settle")
