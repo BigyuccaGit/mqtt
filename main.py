@@ -88,7 +88,7 @@ def connect_to_wifi():
         if not connected:
             
             # Wait a bit then try again
-            logger.warn("Will retry wifi in", wifi_retry,"minutes")
+            logger.warn("Will retry wifi in", wifi_retry,"minute" + ("s" if wifi_retry != 1 else ""))
             for i in range(10):
                 pin.toggle()
                 time.sleep(.1)
@@ -176,17 +176,18 @@ global ack_valid
  
 payload=""
 
-# Set up call to weather sensor
-logger.info("Setting up weather sensor")
-weather = WEATHER()
 
-time.sleep(1)
 
 # Loop infinitely 
 while True:
     
     """ Main loop"""
     try: 
+        # Set up call to weather sensor
+        logger.info("Setting up weather sensor")
+        weather = WEATHER()
+
+        time.sleep(1)
 
         # Connect to WiFi
         connect_to_wifi()
@@ -263,7 +264,7 @@ while True:
             mqtt_client.publish("/auxiliary", payload)
 
             # Delay before next reading
-            logger.info("Next sample in",interval,"minutes")
+            logger.info("Next sample in",interval,"minute" +("s" if interval != 1 else ""))
             time.sleep(interval * 60)#   
            
     except ForceRestart as e:
@@ -274,7 +275,7 @@ while True:
         logger.error(f'OSError: {e} -> {errortext[e.errno]}')
   #      logger.error(f'OSError: {e}')
 
-        logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
+        logger.error("Will attempt to reconnect in",wifi_retry,"minute" + ("s" if wifi_retry != 1 else ""))
         time.sleep(wifi_retry * 60)
         
     except ForceExit as e:
@@ -284,7 +285,7 @@ while True:
     except NoAck as e:
         logger.error(f'NoAck Exception: {repr(e)}')
 
-        logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
+        logger.error("Will attempt to reconnect in",wifi_retry,"minute" + ("s" if wifi_retry != 1 else ""))
         time.sleep(wifi_retry * 60)
     
     except KeyboardInterrupt as e:
@@ -292,7 +293,7 @@ while True:
         
     except Exception as e:
         logger.error(f'Unanticipated Exception: {e} {repr(e)}')
-        logger.error("Will attempt to reconnect in",wifi_retry,"minutes")
+        logger.error("Will attempt to reconnect in",wifi_retry,"minute" + ("s" if wifi_retry != 1 else ""))
         time.sleep(wifi_retry * 60)
 
 
