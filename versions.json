@@ -1,5 +1,8 @@
 {
-  "test_ota.py":5,
-  "main.py":4,
-  "test_publish.py":3
+"logger.py" : 1,
+"weather.py":1,
+"ntptime_picow.py":1,
+"main.py":1,
+"median_filter.py":1,
+"ota.py"
 }
