@@ -83,30 +83,13 @@ class OTAUpdater:
         
         # free up some memory
         self.latest_code_from_repo = None
-        
-    def check_for_updates(self):
-        """ Check if updates are available."""
-        
-        logger.info(f'Checking for latest version... on {self.version_on_repo_url}')
-        response = urequests.get(self.version_on_repo_url)
- 
-        data = json.loads(response.text)
-        
-        self.latest_version_from_repo = int(data['version'])
-        logger.info(f'latest version is: {self.latest_version_from_repo}')
-     
-        # compare versions
-        newer_version_available = True if self.current_version_in_memory < self.latest_version_from_repo else False
-        
-        logger.info(f'Newer version available: {newer_version_available}')    
-        return newer_version_available
  
     def ordered_list_of_files_and_versions(self):
         logger.info(f'Checking for latest versions... on {self.versions_on_repo_url}')
         response = urequests.get(self.versions_on_repo_url)
  
         data2 = json.loads(response.text)
-        
+        logger.info("========>", data2)
         # Store data in list
         l=[k for k in data2]
         # place main.py at end of list
@@ -122,7 +105,7 @@ class OTAUpdater:
     def newer_version(self, filename, version):
         self.filename = filename
         self.latest_version_from_repo = version
-        logger.info("")
+        logger.info("===========================")
         logger.info(f"Filename = '{filename}', version = {self.latest_version_from_repo}")
         self.filename_on_repo_url = self.repo_url + self.origin + filename
         logger.info(f"Remote file is {self.filename_on_repo_url}")
