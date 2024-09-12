@@ -1,6 +1,6 @@
 """
-A simple example that connects to the MQTT server and publishes
-a JSON string of sensed temperature, pressure and humidity
+Connects to the MQTT server and publishe a JSON string 
+of sensed temperature, pressure and humidity
 """
 import logger
 # Ensure logger exists
