@@ -1,6 +1,13 @@
 """
-Connects to the MQTT server and publishe a JSON string 
+Connects to the MQTT server and publishes a JSON string 
 of sensed temperature, pressure and humidity
+
+Micropython doc
+https://docs.micropython.org/en/latest/
+
+MQTT doc
+https://pypi.org/project/micropython-umqtt.simple/
+
 """
 import logger
 # Ensure logger exists
@@ -177,8 +184,6 @@ global payload
 global ack_valid
  
 payload=""
-
-
 
 # Loop infinitely 
 while True:
