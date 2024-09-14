@@ -37,21 +37,7 @@ wifi_retry = 2
 # Other intervals
 ack_delay = 2 # N.B. seconds
 
-# Low pass filtering
-v_filter = MDF()
-l_filter = MDF()
-t_filter = MDF()
-p_filter = MDF()
-h_filter = MDF()
-
-# MQTT details
-mqtt_publish_topic = "/weather"
-
-ldr = machine.ADC(28)
-conv = 3.3/65535.0
-
-minutes=("minute","minutes") # Single/plural
-
+# Define various exceptions
 class ForceRestart(Exception):
     """ Raised to force restart"""
     pass
@@ -122,6 +108,7 @@ def mqtt_subscription_callback(topic, message):
 
     if topic == b'/weather_ack':
         ack_valid = message_s.replace(" ","") == payload.replace(" ","")
+ 
         if ack_valid:
             logger.info("ACK", ack_valid, payload.replace(" ",""))
         else:
@@ -146,11 +133,18 @@ def mqtt_subscription_callback(topic, message):
     else:
         logger.error(f"Unknown topic {topic} received")
     
-def process_callbacks():
+def process_callbacks(mqtt_client):
+    
+    global callback
+    
     """ Process callbacks"""
     while True:
         callback = False
+        
+        # Check for server pending subscription messages, if present pass to callback
         mqtt_client.check_msg()
+        
+        # If no messages present, exit
         if not callback:
             break
         
@@ -179,129 +173,150 @@ def connect_to_mqtt_server():
     
     return mqtt_client
         
-global callback
-global payload
-global ack_valid
- 
-payload=""
+# The main loop
+def main_loop():
 
-# Loop infinitely 
-while True:
+    global callback
+    global payload
+    global ack_valid
     
-    """ Main loop"""
-    try: 
-        # Set up call to weather sensor
-        logger.info("Setting up weather sensor")
-        weather = WEATHER()
+    # Loop infinitely 
+    while True:
+        
+        """ Main loop"""
+        try: 
+            # Set up call to weather sensor
+            logger.info("Setting up weather sensor")
+            weather = WEATHER()
 
-        time.sleep(1)
+            time.sleep(1)
 
-        # Connect to WiFi
-        connect_to_wifi()
-        
-        # Get NTP time
-        ntptime_picow.settime()
-        
-        # Setup client connection to mqtt server 
-        mqtt_client = connect_to_mqtt_server()
-        
-         # Once connected, subscribe to the MQTT topic
-        logger.info("subscribing")
-        mqtt_client.subscribe("exit")
-        mqtt_client.subscribe("interval")
-        mqtt_client.subscribe("restart")
-        mqtt_client.subscribe("ota")
-        mqtt_client.subscribe("/weather_ack")
-        
-        logger.info("Wait 1 second to settle")
-        time.sleep(1)
-        
-        # Commence loop over readings
-        logger.info("Commence reading loop")
-        
-        discard = True
-        while True:
+            # Connect to WiFi
+            connect_to_wifi()
             
-            # Check if any messages are waiting in q and pass all of them to the callback
-            process_callbacks()
-           
-            # Get weather readings in dictionary form (discarding 1st reading)
-            if discard:
-                logger.info("Discarding 1st set of readings")
-                raw=weather.get_readings()
-                time.sleep(1)
-                discard = False
+            # Get NTP time
+            ntptime_picow.settime()
+            
+            # Setup client connection to mqtt server 
+            mqtt_client = connect_to_mqtt_server()
+            
+             # Once connected, subscribe to the MQTT topic
+            logger.info("subscribing")
+            mqtt_client.subscribe("exit")
+            mqtt_client.subscribe("interval")
+            mqtt_client.subscribe("restart")
+            mqtt_client.subscribe("ota")
+            mqtt_client.subscribe("/weather_ack")
+            
+            logger.info("Wait 1 second to settle")
+            time.sleep(1)
+            
+            # Commence loop over readings
+            logger.info("Commence reading loop")
+            
+            discard = True
+            while True:
                 
-            raw=weather.get_readings()   
-            
-            # Perform low pass filtering and add
-            raw['T_FILTER'] = t_filter.calc(raw["Temperature"])
-            raw['P_FILTER'] = p_filter.calc(raw["Pressure"])
-            raw['H_FILTER'] = h_filter.calc(raw["Humidity %"])
- 
-            # Convert to JSON format
-            payload = ujson.dumps(raw)            
-            # Publish the data
-            logger.info("Publish weather", payload)
-            mqtt_client.publish(mqtt_publish_topic, payload)
-            
-            # Allow time for ACK
-            time.sleep(ack_delay)
-            
-            # Look for ack
-            process_callbacks()
-            
-            # Force retry if no ack
-            logger.info("ack_valid", ack_valid)
-            if not ack_valid:
-                raise NoAck(payload)
-            else:
-                for line in logger.iterate():
-                    mqtt_client.publish("/pico_log", line)
-                logger.clear()
-                 
-            # Publish aux data
-            vsys = read_vsys()
-            light = ldr.read_u16() * conv
-            v_filt = v_filter.calc(vsys)
-            l_filt = l_filter.calc(light)
-            aux = {"Voltage": vsys, "Light" : light, "V_FILTER": v_filt, "L_FILTER": l_filt}
-            payload = ujson.dumps(aux) 
-            logger.info("Publish vsys & light", vsys, light, "volts", payload)
-            mqtt_client.publish("/auxiliary", payload)
+                # Check if any messages are waiting in q and pass all of them to the callback
+                process_callbacks(mqtt_client)
+               
+                # Get weather readings in dictionary form (discarding 1st reading)
+                if discard:
+                    logger.info("Discarding 1st set of readings")
+                    raw=weather.get_readings()
+                    time.sleep(1)
+                    discard = False
+                    
+                raw=weather.get_readings()   
+                
+                # Perform low pass filtering and add
+                raw['T_FILTER'] = t_filter.calc(raw["Temperature"])
+                raw['P_FILTER'] = p_filter.calc(raw["Pressure"])
+                raw['H_FILTER'] = h_filter.calc(raw["Humidity %"])
+     
+                # Convert to JSON format
+                payload = ujson.dumps(raw)            
+                # Publish the data
+                logger.info("Publish weather", payload)
+                mqtt_client.publish(mqtt_publish_topic, payload)
+                
+                # Allow time for ACK
+                time.sleep(ack_delay)
+                
+                # Look for ack
+                process_callbacks(mqtt_client)
+                
+                # Force retry if no ack
+                logger.info("ack_valid", ack_valid)
+                if not ack_valid:
+                    raise NoAck(payload)
+                else:
+                    for line in logger.iterate():
+                        mqtt_client.publish("/pico_log", line)
+                    logger.clear()
+                     
+                # Publish aux data
+                vsys = read_vsys()
+                light = ldr.read_u16() * conv
+                v_filt = v_filter.calc(vsys)
+                l_filt = l_filter.calc(light)
+                aux = {"Voltage": vsys, "Light" : light, "V_FILTER": v_filt, "L_FILTER": l_filt}
+                payload = ujson.dumps(aux) 
+                logger.info("Publish vsys & light", vsys, light, "volts", payload)
+                mqtt_client.publish("/auxiliary", payload)
 
-            # Delay before next reading
-            logger.info("Next sample in",interval,minutes[interval != 1])
-            time.sleep(interval * 60)#   
-           
-    except ForceRestart as e:
-        logger.error(f'ForceRestart Exception: {e} {repr(e)}')
-        logger.error("Will attempt to reconnect")
-        
-    except OSError as e:
-        logger.error(f'OSError: {e} -> {errortext[e.errno]}')
-  #      logger.error(f'OSError: {e}')
+                # Delay before next reading
+                logger.info("Next sample in",interval,minutes[interval != 1])
+                time.sleep(interval * 60)#   
+               
+        except ForceRestart as e:
+            logger.error(f'ForceRestart Exception: {e} {repr(e)}')
+            logger.error("Will attempt to reconnect")
+            
+        except OSError as e:
+            logger.error(f'OSError: {e} -> {errortext[e.errno]}')
+      #      logger.error(f'OSError: {e}')
 
-        logger.error("Will attempt to reconnect in",wifi_retry,minutes[wifi_retry != 1])
-        time.sleep(wifi_retry * 60)
+            logger.error("Will attempt to reconnect in",wifi_retry,minutes[wifi_retry != 1])
+            time.sleep(wifi_retry * 60)
+            
+        except ForceExit as e:
+            logger.error(f'Force Exit Exception: {e} {repr(e)}')
+            raise KeyboardInterrupt
         
-    except ForceExit as e:
-        logger.error(f'Force Exit Exception: {e} {repr(e)}')
-        raise KeyboardInterrupt
-    
-    except NoAck as e:
-        logger.error(f'NoAck Exception: {repr(e)}')
+        except NoAck as e:
+            logger.error(f'NoAck Exception: {repr(e)}')
 
-        logger.error("Will attempt to reconnect in",wifi_retry,minutes[wifi_retry != 1])
-        time.sleep(wifi_retry * 60)
-    
-    except KeyboardInterrupt as e:
-        raise KeyboardInterrupt
+            logger.error("Will attempt to reconnect in",wifi_retry,minutes[wifi_retry != 1])
+            time.sleep(wifi_retry * 60)
         
-    except Exception as e:
-        logger.error(f'Unanticipated Exception: {e} {repr(e)}')
-        logger.error("Will attempt to reconnect in",wifi_retry, minutes[wifi_retry != 1])
-        time.sleep(wifi_retry * 60)
+        except KeyboardInterrupt as e:
+            raise KeyboardInterrupt
+            
+        except Exception as e:
+            logger.error(f'Unanticipated Exception: {e} {repr(e)}')
+            logger.error("Will attempt to reconnect in",wifi_retry, minutes[wifi_retry != 1])
+            time.sleep(wifi_retry * 60)
+
+# Finally, start running code
+
+# MQTT details
+mqtt_publish_topic = "/weather"
+
+# Creat low pass filtering instances
+v_filter = MDF()
+l_filter = MDF()
+t_filter = MDF()
+p_filter = MDF()
+h_filter = MDF()
+
+# Light dependent resistor and conversion factor
+ldr = machine.ADC(28)
+conv = 3.3/65535.0
+
+minutes=("minute","minutes") # Single/plural
+            
+main_loop()
 
 
     
