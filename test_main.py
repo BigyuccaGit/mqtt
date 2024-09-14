@@ -251,8 +251,10 @@ def main_loop():
                 if not ack_valid:
                     raise NoAck(payload)
                 else:
+                    # Send all of log
                     for line in logger.iterate():
                         mqtt_client.publish("/pico_log", line)
+                    # Then clear it
                     logger.clear()
                      
                 # Publish aux data
