@@ -25,6 +25,11 @@ async def tx():
     
     print("tx waited", result, end_time-start_time)
     
+    for i in range(2):
+        ans=input("Block test " + str(i) + " " )
+    
+    print("tx ended", ans)
+    
 async def rx(arg):
     print("rx started", arg)
     await asyncio.sleep(1)
