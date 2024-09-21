@@ -31,11 +31,8 @@ import network
 from ota import OTAUpdater
 
 # Interval between measurements / retrys (minutes)
-interval = 2
+interval = 1
 wifi_retry = 2
-
-# Other intervals
-ack_delay = 2 # N.B. seconds
 
 # Define various exceptions
 class ForceRestart(Exception):
@@ -45,11 +42,6 @@ class ForceRestart(Exception):
 class ForceExit(Exception):
     """ Raised to force exit"""
     pass
-
-class NoAck(Exception):
-    """ Raised to force restart"""
-    pass
-
 
 # Connect to WiFi
 def connect_to_wifi():
@@ -95,25 +87,14 @@ def mqtt_subscription_callback(topic, message):
     """ So that we can respond to messages on an MQTT topic, we need a callback
         function that will handle the messages."""
 
-    global ack_valid
-    
     # Flag that callback happened
     callback = True
     
     # Now process the subscription message
     message_s = message.decode("utf-8")
     logger.info(f'Topic \"{topic.decode("utf-8")}\", message \"{message_s}\"')  # Debug print out of what was received over MQTT
-
-    if topic == b'/weather_ack':
-        ack_valid = message_s.replace(" ","") == payload.replace(" ","")
-
-        if ack_valid:
-            logger.info("ACK", ack_valid, payload.replace(" ",""))
-        else:
-            logger.info("ACK invalid: sub message = ", message_s.replace(" ",""))               
-            logger.info("ACK invalid: payload = ", payload.replace(" ",""))               
-        
-    elif topic == b'exit':
+    
+    if topic == b'exit':
         raise ForceExit
     
     elif topic == b'interval':
@@ -201,24 +182,13 @@ def publish_loop(mqtt_client, weather):
         
         # Publish the data
         logger.info("Publish weather", payload)
-        mqtt_client.publish(mqtt_publish_topic, payload)
+        mqtt_client.publish(mqtt_publish_topic, payload, qos = 1)
         
-        # Allow time for ACK
-        time.sleep(ack_delay)
-        
-        # Look for ack
-        process_callbacks(mqtt_client)
-        
-        # Force retry if no ack
-        logger.info("ack_valid", ack_valid)
-        if not ack_valid:
-            raise NoAck(payload)
-        else:
-            # Send all of log
-            for line in logger.iterate():
-                mqtt_client.publish("/pico_log", line)
-            # Then clear it
-            logger.clear()
+        # Send all of log
+        for line in logger.iterate():
+            mqtt_client.publish("/pico_log", line, qos = 1)
+        # Then clear it
+        logger.clear()
              
         # Publish aux data
         vsys = read_vsys()
@@ -228,7 +198,7 @@ def publish_loop(mqtt_client, weather):
         aux = {"Voltage": vsys, "Light" : light, "V_FILTER": v_filt, "L_FILTER": l_filt}
         payload = ujson.dumps(aux) 
         logger.info("Publish vsys & light", vsys, light, "volts", payload)
-        mqtt_client.publish("/auxiliary", payload)
+        mqtt_client.publish("/auxiliary", payload, qos = 1)
 
         # Delay before next reading
         logger.info("Next sample in",interval,minutes[interval != 1])
@@ -289,13 +259,7 @@ def main_loop():
         except ForceExit as e:
             logger.error(f'Force Exit Exception: {e} {repr(e)}')
             raise KeyboardInterrupt
-        
-        except NoAck as e:
-            logger.error(f'NoAck Exception: {repr(e)}')
-
-            logger.error("Will attempt to reconnect in",wifi_retry,minutes[wifi_retry != 1])
-            time.sleep(wifi_retry * 60)
-        
+   
         except KeyboardInterrupt as e:
             raise KeyboardInterrupt
             
