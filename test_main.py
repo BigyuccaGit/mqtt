@@ -35,8 +35,6 @@ interval = 1
 wifi_retry = 2
 subscription_period = 1
 
-mqtt_client = None
-
 # Define various exceptions
 class ForceRestart(Exception):
     """ Raised to force restart"""
