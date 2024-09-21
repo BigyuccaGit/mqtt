@@ -20,7 +20,7 @@ from umqtt.simple import MQTTClient
 import constants
 import errno
 import ujson
-from machine import Pin
+from machine import Pin, Timer
 from read_vsys import read_vsys
 import sys
 import ntptime_picow
@@ -33,6 +33,9 @@ from ota import OTAUpdater
 # Interval between measurements / retrys (minutes)
 interval = 1
 wifi_retry = 2
+subscription_period = 1
+
+mqtt_client = None
 
 # Define various exceptions
 class ForceRestart(Exception):
@@ -83,13 +86,11 @@ def connect_to_wifi():
             time.sleep(wifi_retry * 60)
             
 
+""" Handle subscription callbacks"""
 def mqtt_subscription_callback(topic, message):
-    """ So that we can respond to messages on an MQTT topic, we need a callback
-        function that will handle the messages."""
+     
+    global interval
 
-    # Flag that callback happened
-    callback = True
-    
     # Now process the subscription message
     message_s = message.decode("utf-8")
     logger.info(f'Topic \"{topic.decode("utf-8")}\", message \"{message_s}\"')  # Debug print out of what was received over MQTT
@@ -99,6 +100,7 @@ def mqtt_subscription_callback(topic, message):
     
     elif topic == b'interval':
         interval=float(message)
+        print("Processed interval ------------", interval)
         
     elif topic == b'restart':
         raise ForceRestart
@@ -112,37 +114,29 @@ def mqtt_subscription_callback(topic, message):
         
     else:
         logger.error(f"Unknown topic {topic} received")
-    
-def process_callbacks(mqtt_client):
-    
-    """ Process callbacks"""
-    while True:
-        callback = False
+
+""" Callback for incoming subscription messages"""
+def poll_for_subscriptions(timer):
+        global mqtt_client
         
-        # Check for server pending subscription messages, if present pass to callback
+        # If found, call subscription callback
         mqtt_client.check_msg()
-        
-        # If no messages present, exit
-        if not callback:
-            break
-        
+    
+""" Setup client and connect to mqtt server """
 def connect_to_mqtt_server():
-    """ Setup client and connect to mqtt server """
-    #mqtt_client = MQTTClient(
-    #        client_id=mqtt_client_id,
-    #        server=mqtt_host,
-    #        user=mqtt_username,
-    #        password=mqtt_password)
     # Initialize the MQTTClient 
 
+    global mqtt_client
     logger.info("Setting up mqtt client")
     mqtt_client = MQTTClient(
         client_id = constants.mqtt_client_id,
         server = constants.mqtt_host,
+    #        user=mqtt_username,
+    #        password=mqtt_password)
         port = 1883)
     
-    # Before connecting, tell the MQTT client to use the callback
-    logger.info("Setting up call back")
+    # Before connecting, tell the MQTT client to use the callback function
+    logger.info("Setting up subscriptions callback")
     mqtt_client.set_callback(mqtt_subscription_callback)
     
     # Connect to the MQTT server
@@ -153,16 +147,11 @@ def connect_to_mqtt_server():
 
 # Publish to mqtt_server
 def publish_loop(mqtt_client, weather):
-    
-    global payload
 
     discard = True
     
     while True:
-        
-        # Check if any messages are waiting in q and pass all of them to the callback
-        process_callbacks(mqtt_client)
-       
+               
         # Get weather readings in dictionary form (discarding 1st reading)
         if discard:
             logger.info("Discarding 1st set of readings")
@@ -203,8 +192,7 @@ def publish_loop(mqtt_client, weather):
         # Delay before next reading
         logger.info("Next sample in",interval,minutes[interval != 1])
         time.sleep(interval * 60)
-        
-                      
+                            
 # The main loop
 def main_loop():
     
@@ -239,6 +227,11 @@ def main_loop():
             logger.info("Wait 1 second to settle")
             time.sleep(1)
             
+            # Start polling for subscriptions
+            logger.info("Start polling for subscriptions every", 1000*subscription_period, "ms")
+            timer = Timer()
+            timer.init(period = 1000*subscription_period, callback = poll_for_subscriptions)
+            
             # Commence loop over readings
             logger.info("Commence reading loop")
             
@@ -270,7 +263,7 @@ def main_loop():
 
 # Finally, start running code
 
-# MQTT details
+# MQTT detailsc
 mqtt_publish_topic = "/weather"
 
 # Creat low pass filtering instances
