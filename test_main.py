@@ -44,6 +44,15 @@ class ForceExit(Exception):
     """ Raised to force exit"""
     pass
 
+# Left in for diagnostics
+def poll_for_subscriptions(timer):
+    
+        print("polling")
+        global mqtt_client
+
+        # If found, call subscription callback
+        mqtt_client.check_msg()
+
 # Connect to WiFi
 def connect_to_wifi():
     """ Connect to wi fi """ 
@@ -88,6 +97,8 @@ def connect_to_wifi():
 def mqtt_subscription_callback(topic, message):
      
     global interval
+    global mqtt_client
+    global timer
 
     # Now process the subscription message
     message_s = message.decode("utf-8")
@@ -99,6 +110,14 @@ def mqtt_subscription_callback(topic, message):
     elif topic == b'interval':
         interval=float(message)
         print("Processed interval ------------", interval)
+    
+    elif topic == b'sub_poll':
+        print(message)
+        subscription_period = float(message)
+        timer.deinit()
+        timer.init(period = int(1000*subscription_period), callback =  lambda timer : mqtt_client.check_msg())
+#        timer.init(period = int(1000*subscription_period), callback =  poll_for_subscriptions)
+        print("Processed sub_poll ------------", subscription_period)
         
     elif topic == b'restart':
         raise ForceRestart
@@ -112,19 +131,12 @@ def mqtt_subscription_callback(topic, message):
         
     else:
         logger.error(f"Unknown topic {topic} received")
-
-""" Callback for incoming subscription messages"""
-def poll_for_subscriptions(timer):
-        global mqtt_client
-        
-        # If found, call subscription callback
-        mqtt_client.check_msg()
-    
+  
 """ Setup client and connect to mqtt server """
 def connect_to_mqtt_server():
+    
     # Initialize the MQTTClient 
 
-    global mqtt_client
     logger.info("Setting up mqtt client")
     mqtt_client = MQTTClient(
         client_id = constants.mqtt_client_id,
@@ -194,6 +206,9 @@ def publish_loop(mqtt_client, weather):
 # The main loop
 def main_loop():
     
+    global timer
+    global mqtt_client
+    
     # Loop infinitely 
     while True:
         
@@ -215,9 +230,10 @@ def main_loop():
             mqtt_client = connect_to_mqtt_server()
             
              # Once connected, subscribe to the MQTT topic
-            logger.info("subscribing")
+            logger.info("Subscribing")
             mqtt_client.subscribe("exit")
             mqtt_client.subscribe("interval")
+            mqtt_client.subscribe("sub_poll")
             mqtt_client.subscribe("restart")
             mqtt_client.subscribe("ota")
             mqtt_client.subscribe("/weather_ack")
@@ -228,8 +244,9 @@ def main_loop():
             # Start polling for subscriptions
             logger.info("Start polling for subscriptions every", 1000*subscription_period, "ms")
             timer = Timer()
-            timer.init(period = 1000*subscription_period, callback = poll_for_subscriptions)
-            
+            timer.init(period = 1000*subscription_period, callback =  lambda timer : mqtt_client.check_msg())
+#            timer.init(period = int(1000*subscription_period), callback = poll_for_subscriptions)
+
             # Commence loop over readings
             logger.info("Commence reading loop")
             
