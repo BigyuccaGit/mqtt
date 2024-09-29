@@ -31,9 +31,11 @@ import network
 from ota import OTAUpdater
 
 # Interval between measurements / retrys (minutes)
-interval = 1
+interval = 15
 wifi_retry = 2
-subscription_period = 1
+
+# Poll interval looking for subscriptions (seconds)
+subscription_period = 5 
 
 # Define various exceptions
 class ForceRestart(Exception):
