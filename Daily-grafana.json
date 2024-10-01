@@ -503,7 +503,7 @@
           "tags": []
         }
       ],
-      "title": "Voltage",
+      "title": "Supplied Voltage",
       "type": "gauge"
     },
     {
@@ -1305,6 +1305,6 @@
   "timezone": "utc",
   "title": "Daily",
   "uid": "cc5cbad0-5bbb-412a-a0f5-7625c9b59b85",
-  "version": 73,
+  "version": 74,
   "weekStart": ""
 }
