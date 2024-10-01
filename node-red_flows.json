@@ -312,46 +312,6 @@
         "wires": []
     },
     {
-        "id": "3152b23f73eabfc0",
-        "type": "mqtt out",
-        "z": "109f3201fb38ee0d",
-        "name": "Publish /weather_ack",
-        "topic": "/weather_ack",
-        "qos": "2",
-        "retain": "false",
-        "respTopic": "",
-        "contentType": "",
-        "userProps": "",
-        "correl": "",
-        "expiry": "",
-        "broker": "f58ed7a6fb9844e4",
-        "x": 180,
-        "y": 240,
-        "wires": []
-    },
-    {
-        "id": "39536cc04acd42f7",
-        "type": "mqtt in",
-        "z": "109f3201fb38ee0d",
-        "name": "Subscribe to /weather_ack topic",
-        "topic": "/weather_ack",
-        "qos": "1",
-        "datatype": "auto-detect",
-        "broker": "f58ed7a6fb9844e4",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 210,
-        "y": 340,
-        "wires": [
-            [
-                "e9950f7572a4c231",
-                "8a535c1e900dba31"
-            ]
-        ]
-    },
-    {
         "id": "fd8d036f232203a1",
         "type": "mqtt in",
         "z": "109f3201fb38ee0d",
@@ -683,35 +643,6 @@
         ]
     },
     {
-        "id": "c8d0ef19b6c8de23",
-        "type": "inject",
-        "z": "4d7a3d5b66f6f90b",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "/weather",
-        "payload": "{\"T\":1,\"V\":2,\"P\":3}",
-        "payloadType": "json",
-        "x": 150,
-        "y": 100,
-        "wires": [
-            [
-                "b4cc9389b2cc5cb9"
-            ]
-        ]
-    },
-    {
         "id": "5af432bd86ae259c",
         "type": "rbe",
         "z": "4d7a3d5b66f6f90b",
@@ -821,7 +752,6 @@
         "y": 440,
         "wires": [
             [
-                "a824f0c1ae407474",
                 "65b19d564f7b60e9"
             ]
         ]
