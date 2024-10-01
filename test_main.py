@@ -29,6 +29,7 @@ import os
 from median_filter import MEDIAN_FILTER as MDF
 import network
 from ota import OTAUpdater
+from picotemp import picotemp
 
 # Interval between measurements / retrys (minutes)
 interval = 15
@@ -184,23 +185,29 @@ def publish_loop(mqtt_client, weather):
         # Publish the data
         logger.info("Publish weather", payload)
         mqtt_client.publish(mqtt_publish_topic, payload, qos = 1)
+  
+        # Publish aux data
+        vsys = read_vsys()
+        light = ldr.read_u16() * conv
+        pico_temp = picotemp()
+
+        v_filt = v_filter.calc(vsys)
+        l_filt = l_filter.calc(light)
+        pico_temp_filt = picotemp_filter.calc(pico_temp)
+        
+        aux = {"Voltage": vsys, "Light" : light, "Picotemp" : pico_temp,
+               "V_FILTER": v_filt, "L_FILTER": l_filt, "PICO_TEMP" : pico_temp_filt}
+        payload = ujson.dumps(aux)
+        
+        logger.info("Publish auxiliary data", payload)
+        mqtt_client.publish("/auxiliary", payload, qos = 1)
         
         # Send all of log
         for line in logger.iterate():
             mqtt_client.publish("/pico_log", line, qos = 1)
         # Then clear it
         logger.clear()
-             
-        # Publish aux data
-        vsys = read_vsys()
-        light = ldr.read_u16() * conv
-        v_filt = v_filter.calc(vsys)
-        l_filt = l_filter.calc(light)
-        aux = {"Voltage": vsys, "Light" : light, "V_FILTER": v_filt, "L_FILTER": l_filt}
-        payload = ujson.dumps(aux) 
-        logger.info("Publish vsys & light", vsys, light, "volts", payload)
-        mqtt_client.publish("/auxiliary", payload, qos = 1)
-
+        
         # Delay before next reading
         logger.info("Next sample in",interval,minutes[interval != 1])
         time.sleep(interval * 60)
@@ -283,12 +290,13 @@ def main_loop():
 # MQTT detailsc
 mqtt_publish_topic = "/weather"
 
-# Creat low pass filtering instances
+# Create low pass filtering instances
 v_filter = MDF()
 l_filter = MDF()
 t_filter = MDF()
 p_filter = MDF()
 h_filter = MDF()
+picotemp_filter = MDF()
 
 # Light dependent resistor and conversion factor
 ldr = machine.ADC(28)
