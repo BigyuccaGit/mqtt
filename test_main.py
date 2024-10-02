@@ -14,13 +14,12 @@ import logger
 logger.init()
 logger.info("Starting ===================================")
 from weather import WEATHER
-import network
 import time
 from umqtt.simple import MQTTClient
 import constants
 import errno
 import ujson
-from machine import Pin, Timer
+from machine import Timer
 from read_vsys import read_vsys
 import sys
 import ntptime_picow
@@ -30,6 +29,7 @@ from median_filter import MEDIAN_FILTER as MDF
 import network
 from ota import OTAUpdater
 from picotemp import picotemp
+from connect_to_wifi import connect_to_wifi
 
 # Interval between measurements / retrys (minutes)
 interval = 15
@@ -55,46 +55,6 @@ def poll_for_subscriptions(timer):
 
         # If found, call subscription callback
         mqtt_client.check_msg()
-
-# Connect to WiFi
-def connect_to_wifi():
-    """ Connect to wi fi """ 
-    connected = False
-    while not connected:
-        pin=Pin("LED", Pin.OUT)
-        pin.high()
-        wlan = network.WLAN(network.STA_IF)
-        wlan.active(True)
-        wlan.connect(constants.ssid, constants.password)
-        
-        # Try several times to connect
-        count = 10
-        while count > 0:
-            connected = wlan.isconnected()
-            if not connected:
-                logger.info('Waiting for connection...', count)
-                pin.toggle()
-                time.sleep(1)
-                count -= 1
-                
-            else:
-                ip = wlan.ifconfig()[0]
-                logger.info("Connected",ip,"to WiFi")
-                break
-
-        pin.low()
-
-        # If not connected   
-        if not connected:
-            
-            # Wait a bit then try again
-            logger.warn("Will retry wifi in", wifi_retry, minutes[wifi_retry != 1])
-            for i in range(10):
-                pin.toggle()
-                time.sleep(.1)
-            pin.low()
-            time.sleep(wifi_retry * 60)
-            
 
 """ Handle subscription callbacks"""
 def mqtt_subscription_callback(topic, message):
@@ -202,14 +162,16 @@ def publish_loop(mqtt_client, weather):
         logger.info("Publish auxiliary data", payload)
         mqtt_client.publish("/auxiliary", payload, qos = 1)
         
+        # Announce delay before next reading
+        logger.info("Next sample in",interval,minutes[interval != 1])
+
         # Send all of log
         for line in logger.iterate():
             mqtt_client.publish("/pico_log", line, qos = 1)
         # Then clear it
         logger.clear()
-        
-        # Delay before next reading
-        logger.info("Next sample in",interval,minutes[interval != 1])
+  
+        # Delay
         time.sleep(interval * 60)
                             
 # The main loop
@@ -238,7 +200,7 @@ def main_loop():
             # Setup client connection to mqtt server 
             mqtt_client = connect_to_mqtt_server()
             
-             # Once connected, subscribe to the MQTT topic
+             # Once connected, subscribe to the MQTT topics
             logger.info("Subscribing")
             mqtt_client.subscribe("exit")
             mqtt_client.subscribe("interval")
@@ -257,7 +219,7 @@ def main_loop():
 #            timer.init(period = int(1000*subscription_period), callback = poll_for_subscriptions)
 
             # Commence loop over readings
-            logger.info("Commence reading loop")
+            logger.info("Commence publishing loop")
             
             # Loop over getting weather readings and publishing
             publish_loop(mqtt_client, weather)
