@@ -1,10 +1,13 @@
 import machine
 import utime
 
-chg = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
-pgood = machine.Pin(17, machine.Pin.IN, machine.Pin.PULL_UP)
+chg = machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)
+pgood = machine.Pin(13, machine.Pin.IN, machine.Pin.PULL_UP)
+pin=machine.Pin("LED",machine.Pin.OUT)
 
+i=0
 while True:
-    print(f"chg = {chg.value()}, pgood = {pgood.value()}")
+    i+=1
+    print(f"{i}, chg = {chg.value()}, pgood = {pgood.value()}")
+    pin.toggle()
     utime.sleep(2)
-    
