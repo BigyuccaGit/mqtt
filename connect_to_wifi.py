@@ -2,6 +2,7 @@ from machine import Pin
 import network
 import constants
 import logger
+import time
 
 # Connect to WiFi
 def connect_to_wifi():
