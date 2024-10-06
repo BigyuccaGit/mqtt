@@ -6,5 +6,7 @@
 "median_filter.py":1,
 "ota.py":1,
 "read_vsys.py":1,
-"oserror.py":1
+"oserror.py":1,
+"connect_to_wifi.py":1,
+"picotemp.py":1
 }
