@@ -9,6 +9,7 @@ MQTT doc
 https://pypi.org/project/micropython-umqtt.simple/
 
 """
+import machine
 import logger
 # Ensure logger exists
 logger.init()
@@ -192,7 +193,7 @@ def main_loop():
             time.sleep(1)
 
             # Connect to WiFi
-            connect_to_wifi()
+            connect_to_wifi(wifi_retry, minutes)
             
             # Get NTP time
             ntptime_picow.settime()
@@ -242,10 +243,10 @@ def main_loop():
         except KeyboardInterrupt as e:
             raise KeyboardInterrupt
             
-        except Exception as e:
-            logger.error(f'Unanticipated Exception: {e} {repr(e)}')
-            logger.error("Will attempt to reconnect in",wifi_retry, minutes[wifi_retry != 1])
-            time.sleep(wifi_retry * 60)
+#         except Exception as e:
+#             logger.error(f'Unanticipated Exception: {e} {repr(e)}')
+#             logger.error("Will attempt to reconnect in",wifi_retry, minutes[wifi_retry != 1])
+#             time.sleep(wifi_retry * 60)
 
 # Finally, start running code
 
