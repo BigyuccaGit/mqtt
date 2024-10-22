@@ -243,10 +243,10 @@ def main_loop():
         except KeyboardInterrupt as e:
             raise KeyboardInterrupt
             
-#         except Exception as e:
-#             logger.error(f'Unanticipated Exception: {e} {repr(e)}')
-#             logger.error("Will attempt to reconnect in",wifi_retry, minutes[wifi_retry != 1])
-#             time.sleep(wifi_retry * 60)
+        except Exception as e:
+            logger.error(f'Unanticipated Exception: {e} {repr(e)}')
+            logger.error("Will attempt to reconnect in",wifi_retry, minutes[wifi_retry != 1])
+            time.sleep(wifi_retry * 60)
 
 # Finally, start running code
 
