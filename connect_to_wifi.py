@@ -55,5 +55,5 @@ def connect_to_wifi(wifi_retry, minutes):
             pin.low()
             time.sleep(wifi_retry * 60)
 
-logger.init()
-connect_to_wifi(2,("minute","minutes"))
+#logger.init()
+#connect_to_wifi(2,("minute","minutes"))
