@@ -52,7 +52,7 @@ def init():
     if exists():
         info(f"Log file '{_logfile_}' exists")
         start_size = os.stat(_logfile_)[6]
-        if start_size >= 0:
+        if start_size >= 10000:
             clear()
             error(f"Cleared log file as too big = {start_size}!")
         return
