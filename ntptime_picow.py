@@ -60,7 +60,10 @@ def settime(hrs_offset=0):
         else:
             logger.warn("Timout obtaining NTP time, retrying ...")
             sleep(1.0)
-     
+
+    setRTC(time_ntp, hrs_offset = hrs_offset)
+    
+def setRTC(time_ntp, hrs_offset = 0):
     year, month, mday, hour, minute, second, _, _ = time.localtime(time_ntp)
     machine.RTC().datetime((year, month, mday, 0, hour + hrs_offset, minute,second,0))
-    logger.info("Time set to {0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}".format(year, month, mday, hour + hrs_offset, minute,second))
+    logger.info("Time (re)set to {0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}".format(year, month, mday, hour + hrs_offset, minute,second))

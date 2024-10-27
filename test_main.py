@@ -23,7 +23,7 @@ import ujson
 from machine import Timer
 from read_vsys import read_vsys
 import sys
-import ntptime_picow
+import ntptime_picow as ntp
 from oserror import errortext
 import os
 from median_filter import MEDIAN_FILTER as MDF
@@ -33,11 +33,14 @@ from picotemp import picotemp
 from connect_to_wifi import connect_to_wifi
 
 # Interval between measurements / retrys (minutes)
-interval = 15
+interval = 1
 wifi_retry = 2
 
 # Poll interval looking for subscriptions (seconds)
-subscription_period = 5 
+subscription_period = 5
+
+# Interval between drift corrections using NTP (hrs)
+drift_correction_interval_hrs = 2/60.0
 
 # Define various exceptions
 class ForceRestart(Exception):
@@ -120,7 +123,7 @@ def connect_to_mqtt_server():
     return mqtt_client
 
 # Publish to mqtt_server
-def publish_loop(mqtt_client, weather):
+def publish_loop(mqtt_client, weather, last_ntp_setting):
 
     discard = True
     
@@ -163,6 +166,8 @@ def publish_loop(mqtt_client, weather):
         logger.info("Publish auxiliary data", payload)
         mqtt_client.publish("/auxiliary", payload, qos = 1)
         
+
+                    
         # Announce delay before next reading
         logger.info("Next sample in",interval,minutes[interval != 1])
 
@@ -174,7 +179,19 @@ def publish_loop(mqtt_client, weather):
   
         # Delay
         time.sleep(interval * 60)
-                            
+        
+         # Perform time drift correction if required
+        tdif = time.time() - last_ntp_setting
+        
+#        print("DEBUG", tdif, drift_correction_interval_hrs * 3600, tdif + last_ntp_setting, last_ntp_setting )
+        if tdif >= drift_correction_interval_hrs * 3600:
+            ntp_time = ntp.gettime()
+            if ntp_time != 0:
+                ntp.setRTC(ntp_time)
+                last_ntp_setting = time.time()
+            else:
+                logger.info("NTP time reset failed")
+                
 # The main loop
 def main_loop():
     
@@ -196,7 +213,8 @@ def main_loop():
             connect_to_wifi(wifi_retry, minutes)
             
             # Get NTP time
-            ntptime_picow.settime()
+            ntp.settime()
+            last_ntp_setting = time.time()
             
             # Setup client connection to mqtt server 
             mqtt_client = connect_to_mqtt_server()
@@ -218,12 +236,12 @@ def main_loop():
             timer = Timer()
             timer.init(period = 1000*subscription_period, callback =  lambda timer : mqtt_client.check_msg())
 #            timer.init(period = int(1000*subscription_period), callback = poll_for_subscriptions)
-
+                    
             # Commence loop over readings
             logger.info("Commence publishing loop")
-            
+  
             # Loop over getting weather readings and publishing
-            publish_loop(mqtt_client, weather)
+            publish_loop(mqtt_client, weather, last_ntp_setting)
            
         except ForceRestart as e:
             logger.error(f'ForceRestart Exception: {e} {repr(e)}')
