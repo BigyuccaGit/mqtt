@@ -33,14 +33,14 @@ from picotemp import picotemp
 from connect_to_wifi import connect_to_wifi
 
 # Interval between measurements / retrys (minutes)
-interval = 1
+interval = 15
 wifi_retry = 2
 
 # Poll interval looking for subscriptions (seconds)
 subscription_period = 5
 
 # Interval between drift corrections using NTP (hrs)
-drift_correction_interval_hrs = 2/60.0
+drift_correction_interval_hrs = 24
 
 # Define various exceptions
 class ForceRestart(Exception):
@@ -215,6 +215,7 @@ def main_loop():
             # Get NTP time
             ntp.settime()
             last_ntp_setting = time.time()
+            logger.info(f"Time will be checked for drift every {drift_correction_interval_hrs} hrs")
             
             # Setup client connection to mqtt server 
             mqtt_client = connect_to_mqtt_server()
