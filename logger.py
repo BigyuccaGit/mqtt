@@ -9,6 +9,7 @@ def file(logfile):
 def log(level, text):
     global no_records
 #    dt = machine.RTC().datetime()
+    size_check()
     no_records += 1
     dt = time.gmtime()
  #   datetime = "{0:04d}-{1:02d}-{2:02d} {4:02d}:{5:02d}:{6:02d}".format(*dt)
@@ -50,11 +51,17 @@ def exists():
 
 def init():
     if exists():
+        size_check()
         info(f"Log file '{_logfile_}' exists")
         return
     else:
         clear()
         info(f"Created empty log file: {_logfile_}")
         
-   
+def size_check():
+#    print("==================> Running size check")
+    start_size = os.stat(_logfile_)[6]
+    if start_size >= 100000:
+        clear()
+        error(f"Cleared log file as too big = {start_size}!")   
         
