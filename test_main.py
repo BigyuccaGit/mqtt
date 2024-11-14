@@ -37,18 +37,18 @@ import saverestore as dct
 params = dct.restore()
 
 # Interval between measurements / retrys (minutes)
-interval = params["interval"] #15
+interval : int = params["interval"] #15
 
-wifi_retry = params["wifi_retry"] #2
+wifi_retry : int = params["wifi_retry"] #2
 
 # Poll interval looking for subscriptions (seconds)
-sub_poll = params["sub_poll"] #5
+sub_poll : int = params["sub_poll"] #5
 
 # Interval between drift corrections using NTP (hrs)
-drift_correction = params["drift_correction"] # 24
+drift_correction : int = params["drift_correction"] # 24
 
 # Default quality of service
-qos = params["qos"] # 1 
+qos : int = params["qos"] # 1 
 
 # Define various exceptions
 class ForceRestart(Exception):
@@ -84,12 +84,12 @@ def mqtt_subscription_callback(topic, message):
         raise ForceExit
     
     elif topic == b'interval':
-        interval=float(message)
+        interval=int(message)
         params["interval"] = interval
         logger.info("Processed interval ------------", interval)
     
     elif topic == b'sub_poll':
-        sub_poll = float(message)
+        sub_poll = int(message)
         timer.deinit()
         timer.init(period = int(1000*sub_poll), callback =  lambda timer : mqtt_client.check_msg())
 #        timer.init(period = int(1000*subscription_period), callback =  poll_for_subscriptions)
