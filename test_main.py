@@ -31,7 +31,7 @@ import network
 from ota import OTAUpdater
 from picotemp import picotemp
 from connect_to_wifi import connect_to_wifi
-import dictionary as dct
+import saverestore as dct
 
 # 
 params = dct.restore()
