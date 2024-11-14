@@ -171,9 +171,7 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         
         logger.info("Publish auxiliary data", payload)
         mqtt_client.publish("/auxiliary", payload, qos = qos)
-        
-
-                    
+               
         # Announce delay before next reading
         logger.info("Next sample in",interval,minutes[interval != 1])
 
