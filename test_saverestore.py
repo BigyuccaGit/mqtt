@@ -6,7 +6,6 @@ d={"interval":15,
    "drift_correction":24,
    "wifi_retry":2}
 
-
 saverestore.save(d)
 
 dx = saverestore.restore()
@@ -15,5 +14,5 @@ print(dx)
 
 print(dx == d)
 
-for x in dx:
-    print(x, dx[x])
+for x in dx.items():
+    print(x)

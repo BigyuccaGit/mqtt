@@ -33,18 +33,19 @@ from picotemp import picotemp
 from connect_to_wifi import connect_to_wifi
 import saverestore as dct
 
-# 
+# Get parameters
 params = dct.restore()
 
 # Interval between measurements / retrys (minutes)
 interval = params["interval"] #15
+
 wifi_retry = params["wifi_retry"] #2
 
 # Poll interval looking for subscriptions (seconds)
-subscription_period = params["sub_poll"] #5
+sub_poll = params["sub_poll"] #5
 
 # Interval between drift corrections using NTP (hrs)
-drift_correction_interval_hrs = params["drift_correction"] # 24
+drift_correction = params["drift_correction"] # 24
 
 # Default quality of service
 qos = params["qos"] # 1 
@@ -84,14 +85,16 @@ def mqtt_subscription_callback(topic, message):
     
     elif topic == b'interval':
         interval=float(message)
+        params["interval"] = interval
         logger.info("Processed interval ------------", interval)
     
     elif topic == b'sub_poll':
-        subscription_period = float(message)
+        sub_poll = float(message)
         timer.deinit()
-        timer.init(period = int(1000*subscription_period), callback =  lambda timer : mqtt_client.check_msg())
+        timer.init(period = int(1000*sub_poll), callback =  lambda timer : mqtt_client.check_msg())
 #        timer.init(period = int(1000*subscription_period), callback =  poll_for_subscriptions)
-        logger.info("Processed sub_poll ------------", subscription_period)
+        params["sub_poll"] = sub_poll
+        logger.info("Processed sub_poll ------------", sub_poll)
         
     elif topic == b'restart':
         logger.info("Forcing restart")
@@ -106,19 +109,25 @@ def mqtt_subscription_callback(topic, message):
 
     elif topic == b'qos':
         qos = int(message)
+        params["qos"] = qos
         logger.info("Processed qos ------------", qos) 
 
     elif topic == b'drift_correction':
-        drift_correction_interval_hrs = int(message)  
-        logger.info("Processed drift_correction interval ----- ", drift_correction_interval_hrs)    
+        drift_correction = int(message)  
+        params["drift_correction"] =  drift_correction
+        logger.info("Processed drift_correction interval ----- ", drift_correction)    
 
     elif topic == b'wifi_retry':
-        wifi_retry = int(message)  
+        wifi_retry = int(message)
+        params["wifi_retry"] = wifi_retry
         logger.info("Wifi retry interval (mins) ----- ", wifi_retry)    
    
     else:
         logger.error(f"Unknown topic {topic} received")
   
+    # Save any changes
+    dct.save(params)
+
 """ Setup client and connect to mqtt server """
 def connect_to_mqtt_server():
     
@@ -203,7 +212,7 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         tdif = time.time() - last_ntp_setting
         
 #        print("DEBUG", tdif, drift_correction_interval_hrs * 3600, tdif + last_ntp_setting, last_ntp_setting )
-        if tdif >= drift_correction_interval_hrs * 3600:
+        if tdif >= drift_correction * 3600:
             ntp_time = ntp.gettime()
             if ntp_time != 0:
                 ntp.setRTC(ntp_time)
@@ -234,7 +243,7 @@ def main_loop():
             # Get NTP time
             ntp.settime()
             last_ntp_setting = time.time()
-            logger.info(f"Time will be checked for drift every {drift_correction_interval_hrs} hrs")
+            logger.info(f"Time will be checked for drift every {drift_correction} hrs")
             
             # Setup client connection to mqtt server 
             mqtt_client = connect_to_mqtt_server()
@@ -254,9 +263,9 @@ def main_loop():
             time.sleep(1)
             
             # Start polling for subscriptions
-            logger.info("Start polling for subscriptions every", 1000*subscription_period, "ms")
+            logger.info("Start polling for subscriptions every", 1000*sub_poll, "ms")
             timer = Timer()
-            timer.init(period = 1000*subscription_period, callback =  lambda timer : mqtt_client.check_msg())
+            timer.init(period = 1000*sub_poll, callback =  lambda timer : mqtt_client.check_msg())
 #            timer.init(period = int(1000*subscription_period), callback = poll_for_subscriptions)
                     
             # Commence loop over readings
