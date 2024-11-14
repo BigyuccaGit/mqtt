@@ -103,7 +103,11 @@ def mqtt_subscription_callback(topic, message):
     elif topic == b'qos':
         qos = int(message)
         logger.info("Processed qos ------------", qos) 
-              
+
+    elif topic == b'drift_correction':
+        drift_correction_interval_hrs = int(message)  
+        logger.info("Processed drift_correction interval ----- ", drift_correction_interval_hrs)    
+    
     else:
         logger.error(f"Unknown topic {topic} received")
   
@@ -235,6 +239,7 @@ def main_loop():
             mqtt_client.subscribe("restart")
             mqtt_client.subscribe("ota")
             mqtt_client.subscribe("qos")
+            mqtt_client.subscribe("drift_correction")
             
             logger.info("Wait 1 second to settle")
             time.sleep(1)
