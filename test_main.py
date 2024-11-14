@@ -119,6 +119,7 @@ def connect_to_mqtt_server():
     # Connect to the MQTT server
     logger.info("Connecting to mqtt_client")
     mqtt_client.connect()
+    mqtt_client.publish("/connected","",qos=1)
     
     return mqtt_client
 
