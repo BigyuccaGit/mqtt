@@ -42,6 +42,9 @@ subscription_period = 5
 # Interval between drift corrections using NTP (hrs)
 drift_correction_interval_hrs = 24
 
+# Default quality of service
+qos = 1 
+
 # Define various exceptions
 class ForceRestart(Exception):
     """ Raised to force restart"""
@@ -121,7 +124,7 @@ def connect_to_mqtt_server():
     # Connect to the MQTT server
     logger.info("Connecting to mqtt_client")
     mqtt_client.connect()
-    mqtt_client.publish("/connected","",qos=1)
+    mqtt_client.publish("/connected", "", qos = qos)
     
     return mqtt_client
 
@@ -151,7 +154,7 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         
         # Publish the data
         logger.info("Publish weather", payload)
-        mqtt_client.publish(mqtt_publish_topic, payload, qos = 1)
+        mqtt_client.publish(mqtt_publish_topic, payload, qos = qos)
   
         # Publish aux data
         vsys = read_vsys()
@@ -167,7 +170,7 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         payload = ujson.dumps(aux)
         
         logger.info("Publish auxiliary data", payload)
-        mqtt_client.publish("/auxiliary", payload, qos = 1)
+        mqtt_client.publish("/auxiliary", payload, qos = qos)
         
 
                     
@@ -176,7 +179,7 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
 
         # Send all of log
         for line in logger.iterate():
-            mqtt_client.publish("/pico_log", line, qos = 1)
+            mqtt_client.publish("/pico_log", line, qos = qos)
         # Then clear it
         logger.clear()
   
