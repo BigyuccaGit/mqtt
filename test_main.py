@@ -83,7 +83,6 @@ def mqtt_subscription_callback(topic, message):
         logger.info("Processed interval ------------", interval)
     
     elif topic == b'sub_poll':
-        print(message)
         subscription_period = float(message)
         timer.deinit()
         timer.init(period = int(1000*subscription_period), callback =  lambda timer : mqtt_client.check_msg())
@@ -100,7 +99,11 @@ def mqtt_subscription_callback(topic, message):
         repo_url = "https://github.com/BigyuccaGit/mqtt/"#"https://github.com/kevinmcaleer/ota_test/main/"
         ota_updater = OTAUpdater(repo_url)
         ota_updater.loop_over_updates()
-        
+
+    elif topic == b'qos':
+        qos = int(message)
+        logger.info("Processed qos ------------", qos) 
+              
     else:
         logger.error(f"Unknown topic {topic} received")
   
@@ -231,7 +234,7 @@ def main_loop():
             mqtt_client.subscribe("sub_poll")
             mqtt_client.subscribe("restart")
             mqtt_client.subscribe("ota")
-            mqtt_client.subscribe("/weather_ack")
+            mqtt_client.subscribe("qos")
             
             logger.info("Wait 1 second to settle")
             time.sleep(1)
