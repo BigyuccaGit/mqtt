@@ -250,14 +250,9 @@ def main_loop():
             
              # Once connected, subscribe to the MQTT topics
             logger.info("Subscribing")
-            mqtt_client.subscribe("exit")
-            mqtt_client.subscribe("interval")
-            mqtt_client.subscribe("sub_poll")
-            mqtt_client.subscribe("restart")
-            mqtt_client.subscribe("ota")
-            mqtt_client.subscribe("qos")
-            mqtt_client.subscribe("drift_correction")
-            mqtt_client.subscribe("wifi_retry")
+            topics = ("exit", "interval", "sub_poll", "restart", "ota", "qos", "drift_correction", "wifi_retry")
+            for topic in topics:
+                mqtt_client.subscribe(topic)
             
             logger.info("Wait 1 second to settle")
             time.sleep(1)
