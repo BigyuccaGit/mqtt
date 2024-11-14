@@ -104,9 +104,9 @@ def mqtt_subscription_callback(topic, message):
         qos = int(message)
         logger.info("Processed qos ------------", qos) 
 
-    elif topic == b'drift_correction':
-        drift_correction_interval_hrs = int(message)  
-        logger.info("Processed drift_correction interval ----- ", drift_correction_interval_hrs)    
+    elif topic == b'wifi_retry':
+        wifi_retry = int(message)  
+        logger.info(" wifi retry interval (mins) ----- ", wifi_retry)    
     
     else:
         logger.error(f"Unknown topic {topic} received")
@@ -240,6 +240,7 @@ def main_loop():
             mqtt_client.subscribe("ota")
             mqtt_client.subscribe("qos")
             mqtt_client.subscribe("drift_correction")
+            mqtt_client.subscribe("wifi_retry")
             
             logger.info("Wait 1 second to settle")
             time.sleep(1)
