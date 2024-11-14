@@ -1,17 +1,19 @@
 import dictionary
 
-d={"Z":1, "Y":2}
+d={"interval":15, 
+   "sub_poll":5,
+   "qos":1,
+   "drift_correction":24,
+   "wifi_retry":2}
 
-filename =  "json.buffer"
-dictionary.save(d, filename)
 
-dx = dictionary.restore(filename)
+dictionary.save(d)
+
+dx = dictionary.restore()
 
 print(dx)
 
 print(dx == d)
-print(dx["Z"])
-print(dx["Y"])
 
-print(dictionary.restore(filename)["Z"])
-print(dictionary.restore(filename)["Y"])
+for x in dx:
+    print(x, dx[x])

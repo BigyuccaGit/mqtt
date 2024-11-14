@@ -31,9 +31,12 @@ import network
 from ota import OTAUpdater
 from picotemp import picotemp
 from connect_to_wifi import connect_to_wifi
+import dictionary as dct
+
+dp = dct.restore("parameters.json")
 
 # Interval between measurements / retrys (minutes)
-interval = 15
+interval = dct[""]#15
 wifi_retry = 2
 
 # Poll interval looking for subscriptions (seconds)
