@@ -33,20 +33,21 @@ from picotemp import picotemp
 from connect_to_wifi import connect_to_wifi
 import dictionary as dct
 
-dp = dct.restore("parameters.json")
+# 
+params = dct.restore()
 
 # Interval between measurements / retrys (minutes)
-interval = dct[""]#15
-wifi_retry = 2
+interval = params["interval"] #15
+wifi_retry = params["wifi_retry"] #2
 
 # Poll interval looking for subscriptions (seconds)
-subscription_period = 5
+subscription_period = params["sub_poll"] #5
 
 # Interval between drift corrections using NTP (hrs)
-drift_correction_interval_hrs = 24
+drift_correction_interval_hrs = params["drift_correction"] # 24
 
 # Default quality of service
-qos = 1 
+qos = params["qos"] # 1 
 
 # Define various exceptions
 class ForceRestart(Exception):
