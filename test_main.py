@@ -72,11 +72,12 @@ def mqtt_subscription_callback(topic, message):
     logger.info(f'Topic \"{topic.decode("utf-8")}\", message \"{message_s}\"')  # Debug print out of what was received over MQTT
     
     if topic == b'exit':
+        logger.info("Forcing exit")
         raise ForceExit
     
     elif topic == b'interval':
         interval=float(message)
-        print("Processed interval ------------", interval)
+        logger.info("Processed interval ------------", interval)
     
     elif topic == b'sub_poll':
         print(message)
@@ -84,9 +85,10 @@ def mqtt_subscription_callback(topic, message):
         timer.deinit()
         timer.init(period = int(1000*subscription_period), callback =  lambda timer : mqtt_client.check_msg())
 #        timer.init(period = int(1000*subscription_period), callback =  poll_for_subscriptions)
-        print("Processed sub_poll ------------", subscription_period)
+        logger.info("Processed sub_poll ------------", subscription_period)
         
     elif topic == b'restart':
+        logger.info("Forcing restart")
         raise ForceRestart
     
     elif topic == b'ota':
