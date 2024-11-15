@@ -4,5 +4,6 @@
     "qos": 1,
     "drift_correction": 24,
     "wifi_retry": 2,
-    "daylight_threshold" : 0.3
+    "daylight_threshold" : 0.3,
+    "voltage_threshold" : 3.7
 }
