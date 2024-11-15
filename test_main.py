@@ -176,19 +176,12 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
             
         raw=weather.get_readings()   
         
-        # Perform low pass filtering and add
+        # Perform low pass filtering and add to dictionary
         raw['T_FILTER'] = t_filter.calc(raw["Temperature"])
         raw['P_FILTER'] = p_filter.calc(raw["Pressure"])
         raw['H_FILTER'] = h_filter.calc(raw["Humidity %"])
-
-        # Convert to JSON format
-        payload = ujson.dumps(raw)
-        
-        # Publish the data
-        logger.info("Publish weather", payload)
-        mqtt_client.publish(mqtt_publish_topic, payload, qos = qos)
   
-        # Publish aux data
+        # Get aux data
         vsys = read_vsys() 
         light = ldr.read_u16() * conv
         pico_temp = picotemp()
@@ -197,21 +190,32 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         v_filt = v_filter.calc(vsys)
         l_filt = l_filter.calc(light)
         pico_temp_filt = picotemp_filter.calc(pico_temp)
-         
+
+           # Convert raw weather data to JSON format
+        weather_payload = ujson.dumps(raw)
+        
+        # Determine qos level
+        qos_level = qos if daylight else 0
+
+        # Publish the weather data
+        logger.info("Publish weather", weather_payload)
+        mqtt_client.publish(mqtt_publish_topic, weather_payload, qos = qos_level)
+    
+        # Convert aux data to JSON format
         aux = {"Voltage": vsys, "Light" : light, "Picotemp" : pico_temp,
                "V_FILTER": v_filt, "L_FILTER": l_filt, "PICO_TEMP" : pico_temp_filt,
                "DAYLIGHT": daylight}
-        payload = ujson.dumps(aux)
+        aux_payload = ujson.dumps(aux)
         
-        logger.info("Publish auxiliary data", payload)
-        mqtt_client.publish("/auxiliary", payload, qos = qos)
+        logger.info("Publish auxiliary data", aux_payload)
+        mqtt_client.publish("/auxiliary", aux_payload, qos = qos_level)
                
         # Announce delay before next reading
-        logger.info("Next sample in",interval,minutes[interval != 1])
+        logger.info("Next sample in", interval, minutes[interval != 1])
 
         # Send all of log
         for line in logger.iterate():
-            mqtt_client.publish("/pico_log", line, qos = qos)
+            mqtt_client.publish("/pico_log", line, qos = qos_level)
         # Then clear it
         logger.clear()
   
