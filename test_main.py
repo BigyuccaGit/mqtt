@@ -222,7 +222,9 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         mqtt_client.publish("/auxiliary", aux_payload, qos = qos_level)
                
         # Announce delay before next reading
-        logger.info("Next sample in", interval, minutes[interval != 1])
+        this_interval = interval if not low_voltage else 2 * interval
+        y,m,d,h,min,s,_,_ = time.gmtime(time.time() + this_interval * 60)
+        logger.info("Next sample in", this_interval, f"{minutes[interval != 1]} @ {y}/{m:02d}/{d:02d} {h:02d}:{min:02d}:{s:02d}Z")
 
         # Send all of log
         for line in logger.iterate():
@@ -231,7 +233,7 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         logger.clear()
   
         # Delay
-        time.sleep(interval * 60)
+        time.sleep(this_interval * 60)
         
          # Perform time drift correction if required
         tdif = time.time() - last_ntp_setting
