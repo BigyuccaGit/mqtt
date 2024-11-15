@@ -1,1 +1,8 @@
-{"interval": 15, "sub_poll": 5, "qos": 1, "drift_correction": 24, "wifi_retry": 2}
+{
+    "interval": 15,
+    "sub_poll": 5,
+    "qos": 1,
+    "drift_correction": 24,
+    "wifi_retry": 2,
+    "daylight_threshold" : 0.3
+}
