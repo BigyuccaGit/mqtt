@@ -1,13 +1,14 @@
 {
-"logger.py" : 1,
-"weather.py":1,
-"ntptime_picow.py":1,
-"main.py":3,
-"median_filter.py":1,
-"ota.py":1,
-"read_vsys.py":1,
-"oserror.py":1,
-"connect_to_wifi.py":1,
-"picotemp.py":1,
-"connect_to_wifi.py":1
+    "logger.py": 1,
+    "weather.py": 1,
+    "ntptime_picow.py": 1,
+    "main.py": 3,
+    "median_filter.py": 1,
+    "ota.py": 1,
+    "read_vsys.py": 1,
+    "oserror.py": 1,
+    "connect_to_wifi.py": 1,
+    "picotemp.py": 1,
+    "saverestore.py": 1,
+    "parameters.json": 1
 }
