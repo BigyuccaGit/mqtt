@@ -53,6 +53,9 @@ qos : int = params["qos"] # 1
 # Daylight threshold (volts)
 daylight_threshold = params["daylight_threshold"]
 
+# Low Voltage threshold (volts)
+voltage_threshold = params["voltage_threshold"]
+
 # Define various exceptions
 class ForceRestart(Exception):
     """ Raised to force restart"""
@@ -128,7 +131,12 @@ def mqtt_subscription_callback(topic, message):
     elif topic == b'daylight_threshold':
         daylight_threshold = float(message)  
         params["daylight_threshold"] =  daylight_threshold
-        logger.info("Processed daylight threshold ----- ", daylight_threshold)    
+        logger.info("Processed daylight threshold ----- ", daylight_threshold)  
+
+    elif topic == b'voltage_threshold':
+        voltage_threshold = float(message)  
+        params["voltage_threshold"] =  voltage_threshold
+        logger.info("Processed voltage threshold ----- ", voltage_threshold)    
 
     else:
         logger.error(f"Unknown topic {topic} received")
@@ -185,7 +193,10 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         vsys = read_vsys() 
         light = ldr.read_u16() * conv
         pico_temp = picotemp()
-        daylight =  1 if (light > daylight_threshold) else 0
+
+        # Get derived values
+        daylight =  1 if (light >= daylight_threshold) else 0
+        low_voltage = 0 if vsys >= voltage_threshold else 1
 
         v_filt = v_filter.calc(vsys)
         l_filt = l_filter.calc(light)
@@ -264,7 +275,8 @@ def main_loop():
             
              # Once connected, subscribe to the MQTT topics
             logger.info("Subscribing")
-            topics = ("exit", "interval", "sub_poll", "restart", "ota", "qos", "drift_correction", "wifi_retry", "daylight_threshold")
+            topics = ("exit", "interval", "sub_poll", "restart", "ota", "qos",
+                       "drift_correction", "wifi_retry", "daylight_threshold", "voltage_threshold")
             for topic in topics:
                 mqtt_client.subscribe(topic)
             
