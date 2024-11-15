@@ -48,7 +48,10 @@ sub_poll : int = params["sub_poll"] #5
 drift_correction : int = params["drift_correction"] # 24
 
 # Default quality of service
-qos : int = params["qos"] # 1 
+qos : int = params["qos"] # 1
+
+# Daylight threshold (volts)
+daylight_threshold = params["daylight_threshold"]
 
 # Define various exceptions
 class ForceRestart(Exception):
@@ -120,8 +123,13 @@ def mqtt_subscription_callback(topic, message):
     elif topic == b'wifi_retry':
         wifi_retry = int(message)
         params["wifi_retry"] = wifi_retry
-        logger.info("Wifi retry interval (mins) ----- ", wifi_retry)    
-   
+        logger.info("Wifi retry interval (mins) ----- ", wifi_retry)
+
+    elif topic == b'daylight_threshold':
+        daylight_threshold = float(message)  
+        params["daylight_threshold"] =  daylight_threshold
+        logger.info("Processed daylight threshold ----- ", daylight_threshold)    
+
     else:
         logger.error(f"Unknown topic {topic} received")
   
@@ -181,16 +189,18 @@ def publish_loop(mqtt_client, weather, last_ntp_setting):
         mqtt_client.publish(mqtt_publish_topic, payload, qos = qos)
   
         # Publish aux data
-        vsys = read_vsys()
+        vsys = read_vsys() 
         light = ldr.read_u16() * conv
         pico_temp = picotemp()
+        daylight =  1 if (light > daylight_threshold) else 0
 
         v_filt = v_filter.calc(vsys)
         l_filt = l_filter.calc(light)
         pico_temp_filt = picotemp_filter.calc(pico_temp)
-        
+         
         aux = {"Voltage": vsys, "Light" : light, "Picotemp" : pico_temp,
-               "V_FILTER": v_filt, "L_FILTER": l_filt, "PICO_TEMP" : pico_temp_filt}
+               "V_FILTER": v_filt, "L_FILTER": l_filt, "PICO_TEMP" : pico_temp_filt,
+               "DAYLIGHT": daylight}
         payload = ujson.dumps(aux)
         
         logger.info("Publish auxiliary data", payload)
@@ -250,7 +260,7 @@ def main_loop():
             
              # Once connected, subscribe to the MQTT topics
             logger.info("Subscribing")
-            topics = ("exit", "interval", "sub_poll", "restart", "ota", "qos", "drift_correction", "wifi_retry")
+            topics = ("exit", "interval", "sub_poll", "restart", "ota", "qos", "drift_correction", "wifi_retry", "daylight_threshold")
             for topic in topics:
                 mqtt_client.subscribe(topic)
             
@@ -258,10 +268,10 @@ def main_loop():
             time.sleep(1)
             
             # Start polling for subscriptions
-            logger.info("Start polling for subscriptions every", 1000*sub_poll, "ms")
+            logger.info("Start polling for subscriptions every", 1000 * sub_poll, "ms")
             timer = Timer()
-            timer.init(period = 1000*sub_poll, callback =  lambda timer : mqtt_client.check_msg())
-#            timer.init(period = int(1000*subscription_period), callback = poll_for_subscriptions)
+            timer.init(period = 1000 * sub_poll, callback =  lambda timer : mqtt_client.check_msg())
+#            timer.init(period = int(1000 * sub_poll), callback = poll_for_subscriptions)
                     
             # Commence loop over readings
             logger.info("Commence publishing loop")
@@ -276,7 +286,6 @@ def main_loop():
         except OSError as e:
             logger.error(f'OSError: {e} -> {errortext[e.errno]}')
       #      logger.error(f'OSError: {e}')
-
             logger.error("Will attempt to reconnect in",wifi_retry,minutes[wifi_retry != 1])
             time.sleep(wifi_retry * 60)
             
