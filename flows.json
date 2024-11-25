@@ -1,11 +1,1023 @@
 [
     {
+        "id": "109f3201fb38ee0d",
+        "type": "tab",
+        "label": "Weather Flow",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "4d7a3d5b66f6f90b",
+        "type": "tab",
+        "label": "Out of Limits Checks",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "628331a6068098e1",
         "type": "tab",
         "label": "Commands",
         "disabled": false,
         "info": "",
         "env": []
+    },
+    {
+        "id": "f58ed7a6fb9844e4",
+        "type": "mqtt-broker",
+        "name": "MQTT Broker ",
+        "broker": "192.168.1.191",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "0d49d066b6178d73",
+        "type": "influxdb",
+        "hostname": "192.168.1.191",
+        "port": "8086",
+        "protocol": "http",
+        "database": "sensor_data",
+        "name": "Influxdb",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "1.x",
+        "url": "http://localhost:8086",
+        "timeout": "",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "e4849a9598bbf080",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "a59c08bb3ad0b59f",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "b2afa0bdacecf99d",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "e4849a9598bbf080",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "3f91cc1a371e74f6",
+        "type": "config-log",
+        "logname": "t/s log",
+        "logdir": "/home",
+        "stamp": "utc",
+        "logstyle": "plain",
+        "logrotate": false,
+        "logcompress": false,
+        "logrotatecount": "5",
+        "logsize": "1000"
+    },
+    {
+        "id": "8a535c1e900dba31",
+        "type": "debug",
+        "z": "109f3201fb38ee0d",
+        "name": "Dump payload",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "42de786b18475844",
+        "type": "mqtt in",
+        "z": "109f3201fb38ee0d",
+        "name": "Subscribe to /weather topic",
+        "topic": "/weather",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "f58ed7a6fb9844e4",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 80,
+        "wires": [
+            [
+                "8a535c1e900dba31",
+                "ae2c95881b85bfeb",
+                "e9950f7572a4c231"
+            ]
+        ]
+    },
+    {
+        "id": "ae2c95881b85bfeb",
+        "type": "influxdb out",
+        "z": "109f3201fb38ee0d",
+        "influxdb": "0d49d066b6178d73",
+        "name": "Store /weather measurements to Influxdb",
+        "measurement": "/weather",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "bucket",
+        "x": 660,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "d3647246e0c2d864",
+        "type": "mqtt in",
+        "z": "109f3201fb38ee0d",
+        "name": "Subscribe to /auxiliary topic",
+        "topic": "/auxiliary",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "f58ed7a6fb9844e4",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 300,
+        "wires": [
+            [
+                "8a535c1e900dba31",
+                "eb5bf42aeea8850c",
+                "3d5f4541003ca030",
+                "e9950f7572a4c231"
+            ]
+        ]
+    },
+    {
+        "id": "eb5bf42aeea8850c",
+        "type": "influxdb out",
+        "z": "109f3201fb38ee0d",
+        "influxdb": "0d49d066b6178d73",
+        "name": "Store /auxiliary measurements to Influxdb",
+        "measurement": "/auxiliary",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "bucket",
+        "x": 660,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "fd8d036f232203a1",
+        "type": "mqtt in",
+        "z": "109f3201fb38ee0d",
+        "name": "Subscribe to /pico_log topic",
+        "topic": "/pico_log",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "f58ed7a6fb9844e4",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 200,
+        "y": 400,
+        "wires": [
+            [
+                "04ddf53f526c40e8",
+                "8a535c1e900dba31"
+            ]
+        ]
+    },
+    {
+        "id": "04ddf53f526c40e8",
+        "type": "file",
+        "z": "109f3201fb38ee0d",
+        "name": "Write pico log",
+        "filename": "/home/pico_log.txt",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 580,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3d5f4541003ca030",
+        "type": "link out",
+        "z": "109f3201fb38ee0d",
+        "name": "Link out from Weather Flow",
+        "mode": "link",
+        "links": [
+            "06f6a6f684b08d1a"
+        ],
+        "x": 355,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "e9950f7572a4c231",
+        "type": "flogger",
+        "z": "109f3201fb38ee0d",
+        "name": "Logger",
+        "logfile": "log.txt",
+        "inputchoice": "fullmsg",
+        "inputobject": "payload",
+        "inputobjectType": "msg",
+        "inputmoustache": "Recieved payload {{payload}} and topic {{topic}}",
+        "loglevel": "INFO",
+        "logconfig": "3f91cc1a371e74f6",
+        "sendpane": "",
+        "x": 560,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a18b9a90cfdc591c",
+        "type": "mqtt in",
+        "z": "109f3201fb38ee0d",
+        "name": "Subscribe to /connected topic",
+        "topic": "/connected",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "f58ed7a6fb9844e4",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 200,
+        "y": 480,
+        "wires": [
+            [
+                "dc9b1d7d36fdab12"
+            ]
+        ]
+    },
+    {
+        "id": "d38f9d12d6cbe559",
+        "type": "e-mail",
+        "z": "109f3201fb38ee0d",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": false,
+        "name": "howardhuckle@yahoo.co.uk",
+        "dname": "'Connected' mail notification",
+        "x": 820,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "dc9b1d7d36fdab12",
+        "type": "change",
+        "z": "109f3201fb38ee0d",
+        "name": "Email prep",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "\"Connected to mosquitto server @ \" & $now()",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "\"Connected to Mosquitto server\"",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 480,
+        "wires": [
+            [
+                "d38f9d12d6cbe559"
+            ]
+        ]
+    },
+    {
+        "id": "89b6eedebdcb97e4",
+        "type": "inject",
+        "z": "109f3201fb38ee0d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "/connected",
+        "payload": "",
+        "payloadType": "str",
+        "x": 170,
+        "y": 560,
+        "wires": [
+            [
+                "dc9b1d7d36fdab12"
+            ]
+        ]
+    },
+    {
+        "id": "a3fed5945745a2a1",
+        "type": "debug",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1300,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "5c0b0699b7752c94",
+        "type": "inject",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "/weather",
+        "payload": "{\"T\":2,\"V\":2,\"P\":3}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 200,
+        "wires": [
+            [
+                "b4cc9389b2cc5cb9"
+            ]
+        ]
+    },
+    {
+        "id": "b4cc9389b2cc5cb9",
+        "type": "split",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Split JSON record",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "topic",
+        "property": "payload",
+        "x": 390,
+        "y": 200,
+        "wires": [
+            [
+                "ced38bc7793f2090"
+            ]
+        ]
+    },
+    {
+        "id": "ced38bc7793f2090",
+        "type": "switch",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Get Temperature",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "T",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 590,
+        "y": 200,
+        "wires": [
+            [
+                "8a8e743463c1279a"
+            ]
+        ]
+    },
+    {
+        "id": "8a8e743463c1279a",
+        "type": "switch",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Limit check",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "lte",
+                "v": "2",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 770,
+        "y": 200,
+        "wires": [
+            [
+                "eface2a7c09fa136"
+            ],
+            [
+                "43ba086aaae79d11"
+            ]
+        ]
+    },
+    {
+        "id": "cd224be3d436487d",
+        "type": "debug",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "43ba086aaae79d11",
+        "type": "change",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Prepare OOL email",
+        "rules": [
+            {
+                "t": "set",
+                "p": "temperature",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "\"Temperature out of limits, value = \" & msg.payload & \" @ \" & $now()",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "Out of limits",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "out_of_limits",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 950,
+        "y": 240,
+        "wires": [
+            [
+                "5af432bd86ae259c"
+            ]
+        ]
+    },
+    {
+        "id": "eface2a7c09fa136",
+        "type": "change",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Prepare in-range email",
+        "rules": [
+            {
+                "t": "set",
+                "p": "temperature",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "\"Temperature in limits, value = \" & msg.payload  & \" @ \" & $now()",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "In limit",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "out_of_limits",
+                "pt": "msg",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 960,
+        "y": 160,
+        "wires": [
+            [
+                "5af432bd86ae259c"
+            ]
+        ]
+    },
+    {
+        "id": "c30fe34311b8b96a",
+        "type": "inject",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "/weather",
+        "payload": "{\"T\":3,\"V\":2,\"P\":3}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 300,
+        "wires": [
+            [
+                "b4cc9389b2cc5cb9"
+            ]
+        ]
+    },
+    {
+        "id": "5af432bd86ae259c",
+        "type": "rbe",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Block Repeats",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": false,
+        "property": "out_of_limits",
+        "topi": "topic",
+        "x": 1160,
+        "y": 200,
+        "wires": [
+            [
+                "54c6e830581f4558"
+            ]
+        ]
+    },
+    {
+        "id": "54c6e830581f4558",
+        "type": "debug",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1220,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "0f9e1ed086e7f04b",
+        "type": "inject",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "/weather",
+        "payload": "{\"T\":3,\"V\":2,\"P\":3}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 540,
+        "wires": [
+            [
+                "32bd120d96222feb"
+            ]
+        ]
+    },
+    {
+        "id": "32bd120d96222feb",
+        "type": "change",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Limit check and email prep",
+        "rules": [
+            {
+                "t": "set",
+                "p": "in_limit",
+                "pt": "msg",
+                "to": "payload.Voltage >= 3.1",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "value",
+                "pt": "msg",
+                "to": "payload.Voltage",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "(in_limit  ? \"Voltage in Limit\": \"Voltage out of limits\" ) & \", value = \" & value & \" \\n@ \" & $now()",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "in_limit  ? \"In Limit\": \"Out of limits\"",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 500,
+        "y": 440,
+        "wires": [
+            [
+                "65b19d564f7b60e9"
+            ]
+        ]
+    },
+    {
+        "id": "a824f0c1ae407474",
+        "type": "debug",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "9d5af15b48200a8e",
+        "type": "inject",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "/weather",
+        "payload": "{\"T\":1,\"V\":2,\"P\":3}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 380,
+        "wires": [
+            [
+                "32bd120d96222feb"
+            ]
+        ]
+    },
+    {
+        "id": "db7f553011f012b4",
+        "type": "inject",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "/weather",
+        "payload": "{\"T\":2,\"V\":2,\"P\":3}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 460,
+        "wires": [
+            [
+                "32bd120d96222feb"
+            ]
+        ]
+    },
+    {
+        "id": "65b19d564f7b60e9",
+        "type": "rbe",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Block Repeats",
+        "func": "rbei",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": false,
+        "property": "in_limit",
+        "topi": "topic",
+        "x": 800,
+        "y": 440,
+        "wires": [
+            [
+                "3d83d01528bf80d7",
+                "b5f5f33537357dc4"
+            ]
+        ]
+    },
+    {
+        "id": "06f6a6f684b08d1a",
+        "type": "link in",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "link in OOL check",
+        "links": [
+            "3d5f4541003ca030"
+        ],
+        "x": 205,
+        "y": 660,
+        "wires": [
+            [
+                "32bd120d96222feb"
+            ]
+        ]
+    },
+    {
+        "id": "3d83d01528bf80d7",
+        "type": "file",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "Write ool log",
+        "filename": "/home/ool_log.txt",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1030,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b5f5f33537357dc4",
+        "type": "e-mail",
+        "z": "4d7a3d5b66f6f90b",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": false,
+        "name": "howardhuckle@yahoo.co.uk",
+        "dname": "OOL Mail",
+        "x": 1020,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "b90b68cdbd7c0fdd",
+        "type": "inject",
+        "z": "4d7a3d5b66f6f90b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "test 2",
+        "payload": "test message 2",
+        "payloadType": "str",
+        "x": 820,
+        "y": 640,
+        "wires": [
+            [
+                "b5f5f33537357dc4"
+            ]
+        ]
     },
     {
         "id": "1b894aaef169bc1a",
@@ -58,7 +1070,7 @@
         "payload": "",
         "payloadType": "str",
         "x": 110,
-        "y": 180,
+        "y": 160,
         "wires": [
             [
                 "0740752a03442129"
@@ -87,7 +1099,7 @@
         "payload": "5",
         "payloadType": "num",
         "x": 100,
-        "y": 320,
+        "y": 260,
         "wires": [
             [
                 "0740752a03442129"
@@ -116,7 +1128,7 @@
         "payload": "10",
         "payloadType": "num",
         "x": 100,
-        "y": 360,
+        "y": 300,
         "wires": [
             [
                 "0740752a03442129"
@@ -145,7 +1157,7 @@
         "payload": "15",
         "payloadType": "num",
         "x": 100,
-        "y": 400,
+        "y": 340,
         "wires": [
             [
                 "0740752a03442129"
@@ -174,7 +1186,7 @@
         "payload": "1",
         "payloadType": "num",
         "x": 100,
-        "y": 280,
+        "y": 220,
         "wires": [
             [
                 "0740752a03442129"
@@ -195,7 +1207,7 @@
         "correl": "",
         "expiry": "",
         "broker": "f58ed7a6fb9844e4",
-        "x": 910,
+        "x": 1030,
         "y": 320,
         "wires": []
     },
@@ -250,7 +1262,7 @@
         "payload": "1",
         "payloadType": "num",
         "x": 100,
-        "y": 640,
+        "y": 520,
         "wires": [
             [
                 "0740752a03442129"
@@ -279,7 +1291,7 @@
         "payload": "5",
         "payloadType": "num",
         "x": 100,
-        "y": 680,
+        "y": 560,
         "wires": [
             [
                 "0740752a03442129"
@@ -308,7 +1320,7 @@
         "payload": "10",
         "payloadType": "num",
         "x": 110,
-        "y": 720,
+        "y": 600,
         "wires": [
             [
                 "0740752a03442129"
@@ -337,7 +1349,7 @@
         "payload": "15",
         "payloadType": "num",
         "x": 110,
-        "y": 760,
+        "y": 640,
         "wires": [
             [
                 "0740752a03442129"
@@ -366,7 +1378,7 @@
         "payload": "20",
         "payloadType": "num",
         "x": 100,
-        "y": 440,
+        "y": 380,
         "wires": [
             [
                 "0740752a03442129"
@@ -395,7 +1407,7 @@
         "payload": "30",
         "payloadType": "num",
         "x": 100,
-        "y": 480,
+        "y": 420,
         "wires": [
             [
                 "0740752a03442129"
@@ -424,7 +1436,7 @@
         "payload": "900",
         "payloadType": "num",
         "x": 110,
-        "y": 800,
+        "y": 680,
         "wires": [
             [
                 "0740752a03442129"
@@ -453,7 +1465,7 @@
         "payload": "60",
         "payloadType": "num",
         "x": 100,
-        "y": 520,
+        "y": 460,
         "wires": [
             [
                 "0740752a03442129"
@@ -481,8 +1493,8 @@
         "topic": "qos",
         "payload": "1",
         "payloadType": "num",
-        "x": 390,
-        "y": 100,
+        "x": 430,
+        "y": 80,
         "wires": [
             [
                 "0740752a03442129"
@@ -510,7 +1522,7 @@
         "topic": "qos",
         "payload": "0",
         "payloadType": "num",
-        "x": 390,
+        "x": 430,
         "y": 40,
         "wires": [
             [
@@ -539,8 +1551,8 @@
         "topic": "drift_correction",
         "payload": "24",
         "payloadType": "num",
-        "x": 568.2000122070312,
-        "y": 520.2000122070312,
+        "x": 570,
+        "y": 580,
         "wires": [
             [
                 "0740752a03442129"
@@ -569,7 +1581,7 @@
         "payload": "12",
         "payloadType": "num",
         "x": 570,
-        "y": 580,
+        "y": 620,
         "wires": [
             [
                 "0740752a03442129"
@@ -598,7 +1610,7 @@
         "payload": "5",
         "payloadType": "num",
         "x": 540,
-        "y": 640,
+        "y": 720,
         "wires": [
             [
                 "0740752a03442129"
@@ -627,7 +1639,7 @@
         "payload": "15",
         "payloadType": "num",
         "x": 550,
-        "y": 680,
+        "y": 760,
         "wires": [
             [
                 "0740752a03442129"
@@ -635,31 +1647,148 @@
         ]
     },
     {
-        "id": "f58ed7a6fb9844e4",
-        "type": "mqtt-broker",
-        "name": "MQTT Broker ",
-        "broker": "192.168.1.191",
-        "port": "1883",
-        "clientid": "",
-        "autoConnect": true,
-        "usetls": false,
-        "protocolVersion": "4",
-        "keepalive": "60",
-        "cleansession": true,
-        "autoUnsubscribe": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthPayload": "",
-        "birthMsg": {},
-        "closeTopic": "",
-        "closeQos": "0",
-        "closePayload": "",
-        "closeMsg": {},
-        "willTopic": "",
-        "willQos": "0",
-        "willPayload": "",
-        "willMsg": {},
-        "userProps": "",
-        "sessionExpiry": ""
+        "id": "fe8ab82a0fb85ec4",
+        "type": "inject",
+        "z": "628331a6068098e1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "daylight_threshold",
+        "payload": "0.3",
+        "payloadType": "num",
+        "x": 740,
+        "y": 20,
+        "wires": [
+            [
+                "0740752a03442129"
+            ]
+        ]
+    },
+    {
+        "id": "69984dc21209ecde",
+        "type": "inject",
+        "z": "628331a6068098e1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "daylight_threshold",
+        "payload": "0.4",
+        "payloadType": "num",
+        "x": 740,
+        "y": 60,
+        "wires": [
+            [
+                "0740752a03442129"
+            ]
+        ]
+    },
+    {
+        "id": "76fb2f515c71d7a5",
+        "type": "inject",
+        "z": "628331a6068098e1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "voltage_threshold",
+        "payload": "3.5",
+        "payloadType": "num",
+        "x": 960,
+        "y": 460,
+        "wires": [
+            [
+                "0740752a03442129"
+            ]
+        ]
+    },
+    {
+        "id": "4087a440f05b8afd",
+        "type": "inject",
+        "z": "628331a6068098e1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "voltage_threshold",
+        "payload": "3.7",
+        "payloadType": "num",
+        "x": 960,
+        "y": 540,
+        "wires": [
+            [
+                "0740752a03442129"
+            ]
+        ]
+    },
+    {
+        "id": "7c71af53a370d316",
+        "type": "inject",
+        "z": "628331a6068098e1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "voltage_threshold",
+        "payload": "3.6",
+        "payloadType": "num",
+        "x": 960,
+        "y": 500,
+        "wires": [
+            [
+                "0740752a03442129"
+            ]
+        ]
     }
 ]
